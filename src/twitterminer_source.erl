@@ -1,6 +1,6 @@
 -module(twitterminer_source).
 
--export([twitter_example/0, twitter_print_pipeline/2, twitter_producer/2, get_account_keys/1]).
+-export([mine/2, twitter_print_pipeline/3, twitter_producer/3, get_account_keys/1]).
 
 -record(account_keys, {api_key, api_secret,
                        access_token, access_token_secret}).
@@ -19,14 +19,12 @@ get_account_keys(Name) ->
                 access_token_secret=keyfind(access_token_secret, Keys)}.
 
 %% @doc This example will download a sample of tweets and print it.
-twitter_example() ->
-  URL = "https://stream.twitter.com/1.1/statuses/sample.json",
-
+mine(URL,Parameters) ->
   % We get our keys from the twitterminer.config configuration file.
   Keys = get_account_keys(account1),
 
   % Run our pipeline
-  P = twitterminer_pipeline:build_link(twitter_print_pipeline(URL, Keys)),
+  P = twitterminer_pipeline:build_link(twitter_print_pipeline(URL, Keys,Parameters)),
 
   % If the pipeline does not terminate after 60 s, this process will
   % force it.
@@ -44,9 +42,9 @@ twitter_example() ->
 
 %% @doc Create a pipeline that connects to twitter and
 %% prints tweets.
-twitter_print_pipeline(URL, Keys) ->
+twitter_print_pipeline(URL, Keys,Parameters) ->
 
-  Prod = twitter_producer(URL, Keys),
+  Prod = twitter_producer(URL, Keys,Parameters),
 
   % Pipelines are constructed 'backwards' - consumer is first, producer is last.
   [
@@ -60,14 +58,14 @@ twitter_print_pipeline(URL, Keys) ->
 
 %% @doc Create a pipeline producer that opens a connection
 %% to a Twitter streaming API endpoint.
-twitter_producer(URL, Keys) ->
+twitter_producer(URL, Keys,Parameters) ->
   twitterminer_pipeline:producer(
-    fun receive_tweets/1, {init, URL, Keys}).
+    fun receive_tweets/1, {init, URL, Keys,Parameters}).
 
 % receive_tweets is used as the producer stage of the pipeline.
 % Return values match those expected by twitterminer_pipeline:producer_loop/3.
 % It also has to handle the 'terminate' message.
-receive_tweets({init, URL, Keys}) ->
+receive_tweets({init, URL, Keys,Parameters}) ->
 
   % Twitter streaming API requires a persistent HTTP connection with an infinite stream. 
   % HTTP has not really been made for that, and the only way of cancelling your request
@@ -90,8 +88,7 @@ receive_tweets({init, URL, Keys}) ->
   % Our parsing of the stream later on depends on delimited=length.
   % I have never managed to receive a stall warning, but it would
   % be a good idea to handle them somehow (or at least log).
-  SignedParams = oauth:sign("GET", URL, [{delimited, length},
-    {stall_warnings, true}], Consumer, AccessToken, AccessTokenSecret),
+  SignedParams = oauth:sign("GET", URL, Parameters, Consumer, AccessToken, AccessTokenSecret),
 
   % We use stream_to self() to get the HTTP stream delivered to our process as individual messages.
   % We send the authentication parameters encoded in URI. I tried putting them in HTTP
@@ -106,10 +103,10 @@ receive_tweets({init, URL, Keys}) ->
       ibrowse:stop_worker_process(Pid),
       terminate;
     {ibrowse_async_headers, RId, "200", Headers} ->
-      io:format("Got response with headers ~s.~n", [print_headers(Headers)]),
+      %io:format("Got response with headers ~s.~n", [print_headers(Headers)]),
       {continue, {loop, Pid, RId}};
     {ibrowse_async_headers, RId, HCode, Headers} ->
-      io:format("Got non-200 response (~s) with headers ~s.~n", [HCode, print_headers(Headers)]),
+      %io:format("Got non-200 response (~s) with headers ~s.~n", [HCode, print_headers(Headers)]),
       % We could download the HTTP stream here as well.
       {error, {http_non_200, HCode, Headers}};
     {ibrowse_async_response, RId, {error, Reason}} ->
@@ -167,7 +164,11 @@ my_print(T) ->
         not_found -> ok
       end,
       case extract(<<"text">>, L) of
-        {found, TT} -> io:format("tweet: ~ts~n", [TT]);
+        {found, TT} ->
+          ResultGeo = extract(<<"geo">>, L),
+          ResultCoordinates = extract(<<"cordinates">>, L),
+          ResultPlace = extract(<<"place">>, L),
+          happines_calculator:add_tweet([TT],ResultGeo,ResultCoordinates,ResultPlace);
         not_found -> ok
           %case extract(<<"delete">>, L) of
           %  {found, _} -> io:format("deleted: ~p~n", [L]);

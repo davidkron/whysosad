@@ -20,6 +20,7 @@ get_account_keys(Name) ->
 
 %% @doc This example will download a sample of tweets and print it.
 mine(URL,Parameters) ->
+  happines_calculator:start(),
   % We get our keys from the twitterminer.config configuration file.
   Keys = get_account_keys(account1),
 
@@ -106,7 +107,7 @@ receive_tweets({init, URL, Keys,Parameters}) ->
       %io:format("Got response with headers ~s.~n", [print_headers(Headers)]),
       {continue, {loop, Pid, RId}};
     {ibrowse_async_headers, RId, HCode, Headers} ->
-      %io:format("Got non-200 response (~s) with headers ~s.~n", [HCode, print_headers(Headers)]),
+      io:format("Got non-200 response (~s) with headers ~s.~n", [HCode, print_headers(Headers)]),
       % We could download the HTTP stream here as well.
       {error, {http_non_200, HCode, Headers}};
     {ibrowse_async_response, RId, {error, Reason}} ->
@@ -168,7 +169,7 @@ my_print(T) ->
           ResultGeo = extract(<<"geo">>, L),
           ResultCoordinates = extract(<<"cordinates">>, L),
           ResultPlace = extract(<<"place">>, L),
-          happines_calculator:add_tweet([TT],ResultGeo,ResultCoordinates,ResultPlace);
+          happines_calculator:add_tweet(TT,ResultGeo,ResultCoordinates,ResultPlace);
         not_found -> ok
           %case extract(<<"delete">>, L) of
           %  {found, _} -> io:format("deleted: ~p~n", [L]);

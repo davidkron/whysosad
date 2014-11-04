@@ -9,9 +9,48 @@
 -module(database).
 -author("David").
 
-%% API
--export([put/2]).
+-export([start/0,stop/0,getData/1,setData/2]).
 
-put(key,value) -> ok.
-get(key) -> ok.
 
+start() ->
+  Registered = whereis(sts) =/= undefined,
+  if
+    Registered -> {ok,whereis(sts)}; % If started, return the process id
+    not Registered -> Pid = spawn(fun () -> init() end), %If not started, spawn Init and register
+      register(sts,Pid), {ok,Pid}
+  end.
+
+stop() ->
+  Registered = whereis(sts) =/= undefined,
+  if
+    Registered -> sts ! {stop,self()}, receive stopComplete->stopped end;
+    not Registered -> already_stopped
+  end.
+
+getData(Key) ->
+  sts ! {get,self(),Key},
+  receive
+    {getAnswer,Value} -> Value
+  end.
+
+setData(Key,Value) -> sts ! {set,self(),Key,Value} ,ok.
+
+init()-> sts ! print,loop(maps:new()).
+
+print(Map)->
+  io:format("~n--------------------------------------~n"),
+  %io:format("\e[H\e[J"),
+  Countries = maps:keys(Map),
+  [io:format(lists:append(Country ++ "\: " ++ integer_to_list(maps:get(Country,Map)),"\t"))
+    || Country<-Countries].
+
+loop(Map) ->
+  receive
+    %print ->
+
+    {stop,Pid} -> Pid ! stopComplete;
+    {set,Pid,Key,Value} -> loop(maps:put(Key,Value,Map)); % Put the Value(Map List or Variable) in the big map
+    {get,Pid,Key} -> Pid ! {getAnswer,maps:get(Key,Map,0)}, loop(Map)
+    after 1000 ->
+      print(Map),loop(Map)
+  end.

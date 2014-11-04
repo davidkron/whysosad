@@ -9,7 +9,6 @@
 -module(whysosad).
 -author("David").
 
-%% API
 -export([start/0]).
 
 start()->

@@ -9,7 +9,7 @@
 -module(database).
 -author("David").
 
--export([start/0,stop/0,getData/1,setData/2]).
+-export([start/0,stop/0,getData/1,setData/2,getMap/0]).
 
 
 start() ->
@@ -33,6 +33,12 @@ getData(Key) ->
     {getAnswer,Value} -> Value
   end.
 
+getMap()->
+  sts ! {getMap,self()},
+  receive
+    {getMapAnswer,Map} -> Map
+  end.
+
 setData(Key,Value) -> sts ! {set,self(),Key,Value} ,ok.
 
 init()-> sts ! print,loop(maps:new()).
@@ -46,11 +52,10 @@ print(Map)->
 
 loop(Map) ->
   receive
-    %print ->
-
+    {getMap, Pid} -> Pid ! {getMapAnswer,Map};
     {stop,Pid} -> Pid ! stopComplete;
     {set,Pid,Key,Value} -> loop(maps:put(Key,Value,Map)); % Put the Value(Map List or Variable) in the big map
     {get,Pid,Key} -> Pid ! {getAnswer,maps:get(Key,Map,0)}, loop(Map)
-    after 1000 ->
+    after 500 ->
       print(Map),loop(Map)
   end.

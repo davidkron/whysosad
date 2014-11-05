@@ -27,10 +27,10 @@ add_tweet(TT,ResultPlace,Time) ->
           null -> ok;
         {L} ->
             Tweet = binary_to_list(TT),
+            TimeInMinutes = binary_to_integer(Time) div (60*60),
             %Print Country code
             {_, Country} = lists:keyfind(<<"country_code">>, 1, L),
             CountryString = binary_to_list(Country),
-            %io:format(lists:append("~nCountry:", CountryString)),
             PreviousHappy = database:getData(CountryString),
             Happy = string_count(Tweet,":)") + string_count(Tweet,"(:"),
             Sadness = string_count(Tweet,"):") + string_count(Tweet,":("),

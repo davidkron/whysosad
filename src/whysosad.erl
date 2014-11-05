@@ -22,5 +22,5 @@ start()->
              "):",
              ":'("],
   Parameters = [{delimited, length},{stall_warnings, true},{track,string:join(Smileys,",")}],
-  twitterminer_source:mine(URL,Parameters),
-  httpserver:start().
+  spawn(fun ()->httpserver:start() end),
+  twitterminer_source:mine(URL,Parameters).

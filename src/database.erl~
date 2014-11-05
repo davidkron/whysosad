@@ -9,7 +9,7 @@
 -module(database).
 -author("David").
 
--export([start/0,stop/0,getData/1,setData/2,getMap/0]).
+-export([start/0,stop/0,getData/1,setData/2]).
 
 
 start() ->
@@ -33,17 +33,12 @@ getData(Key) ->
     {getAnswer,Value} -> Value
   end.
 
-getMap()->
-  sts ! {getMap,self()},
-  receive
-    {getMapAnswer,Map} -> Map
-  end.
-
 setData(Key,Value) -> sts ! {set,self(),Key,Value} ,ok.
 
 init()-> sts ! print,loop(maps:new()).
 
 print(Map)->
+  io:format("~n--------------------------------------~n"),
   io:format("\e[H\e[J"),
   Countries = maps:keys(Map),
   [io:format(lists:append(Country ++ "\: " ++ integer_to_list(maps:get(Country,Map)),"\t"))
@@ -51,10 +46,11 @@ print(Map)->
 
 loop(Map) ->
   receive
-    {getMap, Pid} -> Pid ! {getMapAnswer,Map};
+    %print ->
+
     {stop,Pid} -> Pid ! stopComplete;
     {set,Pid,Key,Value} -> loop(maps:put(Key,Value,Map)); % Put the Value(Map List or Variable) in the big map
     {get,Pid,Key} -> Pid ! {getAnswer,maps:get(Key,Map,0)}, loop(Map)
-    after 200 ->
+    after 1000 ->
       print(Map),loop(Map)
   end.

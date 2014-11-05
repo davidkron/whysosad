@@ -32,8 +32,8 @@ mine(URL,Parameters) ->
   T = spawn_link(fun () ->
         receive
           cancel -> ok
-        after 60000 -> % Sleep fo 60 s
-            twitterminer_pipeline:terminate(P)
+%        after 60000 -> % Sleep fo 60 s
+%            twitterminer_pipeline:terminate(P)
         end
     end),
 

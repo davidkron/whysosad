@@ -32,8 +32,10 @@ add_tweet(TT,ResultPlace,Time) ->
             CountryString = binary_to_list(Country),
             %io:format(lists:append("~nCountry:", CountryString)),
             PreviousHappy = database:getData(CountryString),
-            Happy = string_count(Tweet,":)") + string_count(Tweet,"(:"),
-            Sadness = string_count(Tweet,"):") + string_count(Tweet,":("),
+%            Happy = string_count(Tweet,":)") + string_count(Tweet,"(:"),
+%            Sadness = string_count(Tweet,"):") + string_count(Tweet,":("),
+	     Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- happy_smileys_list()]),
+	      Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- sad_smileys_list()]),
             if
               Happy > Sadness -> database:setData(CountryString,PreviousHappy+1);
               Sadness > Happy -> database:setData(CountryString,PreviousHappy-1);
@@ -42,6 +44,10 @@ add_tweet(TT,ResultPlace,Time) ->
       end;
     X -> io:format("Something: ~p ~n",X)
   end.
+
+happy_smileys_list()->[":)", "(:", ":D"].
+
+sad_smileys_list() -> [":/", ":(" ,"):", ":'("].
 
 
 get_happiness(Country) ->

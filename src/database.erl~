@@ -51,6 +51,6 @@ loop(Map) ->
     {stop,Pid} -> Pid ! stopComplete;
     {set,Pid,Key,Value} -> loop(maps:put(Key,Value,Map)); % Put the Value(Map List or Variable) in the big map
     {get,Pid,Key} -> Pid ! {getAnswer,maps:get(Key,Map,0)}, loop(Map)
-    after 200 ->
+    after 1000 ->
       print(Map),loop(Map)
   end.

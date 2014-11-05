@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(happines_calculator).
 -author("David").
--export([add_tweet/4,start/0]).
+-export([add_tweet/3,start/0]).
 
 start()-> database:start().
 
@@ -19,7 +19,7 @@ string_count(String,SearchString) ->
     Position == 0 -> 0
   end.
 
-add_tweet(TT,ResultGeo,ResultCoordinates,ResultPlace) ->
+add_tweet(TT,ResultPlace,Time) ->
   case ResultPlace of
     {found,X}->
       case X of
@@ -46,9 +46,6 @@ add_tweet(TT,ResultGeo,ResultCoordinates,ResultPlace) ->
 
 get_happiness(Country) ->
   ok.
-
-happiness_of_tweet(tweet) ->
-  10.
 
 put_into_database(happiness,countrycode)->
   database:put(happiness,countrycode).

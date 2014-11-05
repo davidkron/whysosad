@@ -166,15 +166,10 @@ my_print(T) ->
       end,
       case extract(<<"text">>, L) of
         {found, TT} ->
-          ResultGeo = extract(<<"geo">>, L),
-          ResultCoordinates = extract(<<"cordinates">>, L),
+          {found,Time} = extract(<<"timestamp_ms">>, L),
           ResultPlace = extract(<<"place">>, L),
-          happines_calculator:add_tweet(TT,ResultGeo,ResultCoordinates,ResultPlace);
+          happines_calculator:add_tweet(TT,ResultPlace,Time);
         not_found -> ok
-          %case extract(<<"delete">>, L) of
-          %  {found, _} -> io:format("deleted: ~p~n", [L]);
-          %  not_found -> io:format("~s~n", [B])
-          %end
       end;
     {invalid_tweet, B} -> io:format("failed to parse: ~s~n", [B])
   end.

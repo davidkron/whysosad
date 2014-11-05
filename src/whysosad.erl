@@ -14,6 +14,13 @@
 start()->
   application:ensure_all_started(twitterminer),
   URL = "https://stream.twitter.com/1.1/statuses/filter.json",
-  Parameters = [{delimited, length},{stall_warnings, true},{track,":)"}],
+  Smileys = [":)",
+             "(:",
+             ":D",
+             ":/",
+             ":(",
+             "):",
+             ":'("],
+  Parameters = [{delimited, length},{stall_warnings, true},{track,string:join(Smileys,",")}],
   twitterminer_source:mine(URL,Parameters),
   httpserver:start().

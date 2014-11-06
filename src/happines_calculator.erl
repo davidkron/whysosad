@@ -10,7 +10,7 @@
 -author("David").
 -export([add_tweet/3,start/0]).
 
-start()-> database:start().
+start()-> database_riak:start().
 
 string_count(String,SearchString) ->
   Position = string:str(String,SearchString),
@@ -31,14 +31,14 @@ add_tweet(TT,ResultPlace,Time) ->
             %Print Country code
             {_, Country} = lists:keyfind(<<"country_code">>, 1, L),
             CountryString = binary_to_list(Country),
-            PreviousHappy = database:getData(CountryString),
+            PreviousHappy = list_to_integer(database_riak:getData(CountryString, "countries")),
 %            Happy = string_count(Tweet,":)") + string_count(Tweet,"(:"),
 %            Sadness = string_count(Tweet,"):") + string_count(Tweet,":("),
 	     Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),
 	      Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:sad_smileys()]),
             if
-              Happy > Sadness -> database:setData(CountryString,PreviousHappy+1);
-              Sadness > Happy -> database:setData(CountryString,PreviousHappy-1);
+              Happy > Sadness -> database_riak:setData(CountryString, integer_to_list(PreviousHappy+1), "countries");
+              Sadness > Happy -> database_riak:setData(CountryString, integer_to_list(PreviousHappy-1), "countries");
               Sadness == Happy -> ok
             end
       end;
@@ -49,9 +49,5 @@ add_tweet(TT,ResultPlace,Time) ->
 
 %sad_smileys_list() -> [":/", ":(" ,"):", ":'("].
 
-
-get_happiness(Country) ->
-  ok.
-
-put_into_database(happiness,countrycode)->
-  database:put(happiness,countrycode).
+%% put_into_database(happiness,countrycode)->
+%%   database_riak:put(happiness,countrycode).

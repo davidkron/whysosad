@@ -51,7 +51,7 @@ print(Map)->
 
 loop(Map) ->
   receive
-    {getMap, Pid} -> Pid ! {getMapAnswer,Map};
+    {getMap, Pid} -> Pid ! {getMapAnswer,Map},loop(Map);
     {stop,Pid} -> Pid ! stopComplete;
     {set,Pid,Key,Value} -> loop(maps:put(Key,Value,Map)); % Put the Value(Map List or Variable) in the big map
     {get,Pid,Key} -> Pid ! {getAnswer,maps:get(Key,Map,0)}, loop(Map)

@@ -33,9 +33,10 @@ clearMap(Key) ->
     riakc_obj:new(
       <<"whysosad">>,
       list_to_binary(Key),
-      term_to_binary(maps:to_list(#{}))
+      #{}
     )
-  ).
+  ),
+  #{}.
 
 getMap(Key) ->
   try
@@ -43,17 +44,17 @@ getMap(Key) ->
       <<"whysosad">>,
       list_to_binary(Key)
     ),
-    maps:from_list(binary_to_term(Map))
+    binary_to_term(Map)
   catch
-    % If map doesn't exist, create an empty one
+   % If map doesn't exist, create an empty one
     _:_ -> clearMap(Key)
   end.
 
 getData(Key, MapKey) -> Map = getMap(MapKey), maps:get(Key, Map, "0").
 
 setData(Key, Value, MapKey) -> Map = getMap(MapKey),
-  MapNew = term_to_binary(maps:to_list(maps:put(Key, Value, Map))),
-  RiakObject = riakc_obj:new(<<"whysosad">>, term_to_binary(MapKey), MapNew),
+  MapNew = maps:put(Key, Value, Map),
+  RiakObject = riakc_obj:new(<<"whysosad">>, list_to_binary(MapKey), MapNew),
   riakc_pb_socket:put(sts, RiakObject).
 
 printMap(stop) -> PrintPid = whereis(print),
@@ -65,7 +66,9 @@ printMap(Key) ->
   Map = lists:concat([ "{" ++ K ++ ","++ V ++ "} " || {K, V} <-maps:to_list(getMap(Key))]),
   io:format("~p~n", [Map]).
 
-printMap(Key, Freq) -> register(print, spawn(fun() -> printLoop(Key, Freq) end)).
+printMap(Key, Freq) -> PrintPid = whereis(print),
+  if is_pid(PrintPid) == true -> exit(PrintPid, kill); true -> ok end,
+  register(print, spawn(fun() -> printLoop(Key, Freq) end)).
 
 printLoop(Key, Freq) ->
   receive

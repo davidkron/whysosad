@@ -27,7 +27,6 @@ add_tweet(TT,ResultPlace) ->
         null -> ok;
         {L} ->
           Tweet = binary_to_list(TT),
-          %Print Country code
           {_, Country} = lists:keyfind(<<"country_code">>, 1, L),
           CountryString = binary_to_list(Country),
           PreviousHappy = database_riak:getHappiness(CountryString, "current"),

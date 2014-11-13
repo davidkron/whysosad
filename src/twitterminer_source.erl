@@ -103,7 +103,7 @@ receive_tweets({init, URL, Keys,Parameters}) ->
       ibrowse:stream_close(RId),
       ibrowse:stop_worker_process(Pid),
       terminate;
-    {ibrowse_async_headers, RId, "200", Headers} ->
+    {ibrowse_async_headers, RId, "200", _} ->
       %io:format("Got response with headers ~s.~n", [print_headers(Headers)]),
       {continue, {loop, Pid, RId}};
     {ibrowse_async_headers, RId, HCode, Headers} ->
@@ -166,9 +166,9 @@ my_print(T) ->
       end,
       case extract(<<"text">>, L) of
         {found, TT} ->
-          {found,Time} = extract(<<"timestamp_ms">>, L),
+          {found,_} = extract(<<"timestamp_ms">>, L),
           ResultPlace = extract(<<"place">>, L),
-          happines_calculator:add_tweet(TT,ResultPlace,Time);
+          happines_calculator:add_tweet(TT,ResultPlace);
         not_found -> ok
       end;
     {invalid_tweet, B} -> io:format("failed to parse: ~s~n", [B])

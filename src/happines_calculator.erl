@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(happines_calculator).
 -author("David").
--export([add_tweet/3,start/0]).
+-export([add_tweet/2,start/0]).
 
 start()-> database_riak:start().
 
@@ -19,28 +19,35 @@ string_count(String,SearchString) ->
     Position == 0 -> 0
   end.
 
-add_tweet(TT,ResultPlace,Time) ->
+add_tweet(TT,ResultPlace) ->
   case ResultPlace of
     {found,X}->
       case X of
-          not_found -> ok;
-          null -> ok;
+        not_found -> ok;
+        null -> ok;
         {L} ->
-            Tweet = binary_to_list(TT),
-            TimeInMinutes = binary_to_integer(Time) div (60*60),
-            %Print Country code
-            {_, Country} = lists:keyfind(<<"country_code">>, 1, L),
-            CountryString = binary_to_list(Country),
-            PreviousHappy = list_to_integer(database_riak:getData(CountryString, "countries")),
+          Tweet = binary_to_list(TT),
+          %Print Country code
+          {_, Country} = lists:keyfind(<<"country_code">>, 1, L),
+          CountryString = binary_to_list(Country),
+          PreviousHappy = database_riak:getHappiness(CountryString, "current"),
 %            Happy = string_count(Tweet,":)") + string_count(Tweet,"(:"),
 %            Sadness = string_count(Tweet,"):") + string_count(Tweet,":("),
-	     Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),
-	      Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:sad_smileys()]),
-            if
-              Happy > Sadness -> database_riak:setData(CountryString, integer_to_list(PreviousHappy+1), "countries");
-              Sadness > Happy -> database_riak:setData(CountryString, integer_to_list(PreviousHappy-1), "countries");
-              Sadness == Happy -> ok
-            end
+          PreviousTime = database_riak:getTimestamp(CountryString),
+          {_, Time, _} = now(),
+          if Time - PreviousTime >= 60 ->
+            database_riak:setTimestamp(CountryString, Time),
+            database_riak:setHappiness(CountryString, "previous", PreviousHappy),
+            database_riak:setHappiness(CountryString, "current", 0);
+          true ->
+            Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),
+            Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:sad_smileys()]),
+              if
+                Happy > Sadness -> database_riak:setHappiness(CountryString, "current", PreviousHappy + 1);
+                Sadness > Happy -> database_riak:setHappiness(CountryString, "current", PreviousHappy - 1);
+                Sadness == Happy -> ok
+              end
+          end
       end;
     X -> io:format("Something: ~p ~n",X)
   end.

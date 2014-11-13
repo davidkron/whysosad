@@ -10,7 +10,7 @@
 -author("Simeon").
 
 %% API
--export([start/0, stop/0, getMap/1, clearMap/1, getData/2, setData/3, printMap/1, printMap/2]).
+-export([start/0, stop/0, getMap/1, clearMap/1, getTimestamp/1, setTimestamp/2, getHappiness/2, setHappiness/3]).
 
 start() ->
   ServerPid = whereis(sts),
@@ -50,28 +50,26 @@ getMap(Key) ->
     _:_ -> clearMap(Key)
   end.
 
-getData(Key, MapKey) -> Map = getMap(MapKey), maps:get(Key, Map, "0").
-
-setData(Key, Value, MapKey) -> Map = getMap(MapKey),
-  MapNew = maps:put(Key, Value, Map),
-  RiakObject = riakc_obj:new(<<"whysosad">>, list_to_binary(MapKey), MapNew),
+setData(Country, TimeFrame, Key, Value) ->
+  CountriesMap = getMap("countries"),
+  CountryMap = maps:get(Country, CountriesMap, #{}),
+  TimeFrameMap = maps:get(TimeFrame, CountryMap, #{}),
+  NewTimeFrameMap = maps:put(Key, Value, TimeFrameMap),
+  NewCountryMap = maps:put(TimeFrame, NewTimeFrameMap, CountryMap),
+  NewCountriesMap = maps:put(Country, NewCountryMap, CountriesMap),
+  RiakObject = riakc_obj:new(<<"whysosad">>, list_to_binary("countries"), NewCountriesMap),
   riakc_pb_socket:put(sts, RiakObject).
 
-printMap(stop) -> PrintPid = whereis(print),
-  if PrintPid == undefined -> already_stopped;
-    true -> exit(whereis(print), kill), stopped
-  end;
-printMap(Key) ->
-  io:format("\e[H\e[J"),
-  Map = lists:concat([ "{" ++ K ++ ","++ V ++ "} " || {K, V} <-maps:to_list(getMap(Key))]),
-  io:format("~p~n", [Map]).
+getData(Country, TimeFrame, Key) ->
+  CountriesMap = getMap("countries"),
+  CountryMap = maps:get(Country, CountriesMap, #{}),
+  TimeFrameMap = maps:get(TimeFrame, CountryMap, #{}),
+  maps:get(Key, TimeFrameMap, 0).
 
-printMap(Key, Freq) -> PrintPid = whereis(print),
-  if is_pid(PrintPid) == true -> exit(PrintPid, kill); true -> ok end,
-  register(print, spawn(fun() -> printLoop(Key, Freq) end)).
+getTimestamp(Country) -> getData(Country, "previous", "timestamp").
 
-printLoop(Key, Freq) ->
-  receive
-    after Freq ->
-      printMap(Key), printLoop(Key, Freq)
-  end.
+setTimestamp(Country, Value) -> setData(Country, "previous", "timestamp", Value).
+
+getHappiness(Country, TimeFrame) -> getData(Country, TimeFrame, "value").
+
+setHappiness(Country, TimeFrame, Value) -> setData(Country, TimeFrame, "value", Value).

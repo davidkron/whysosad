@@ -31,8 +31,6 @@ add_tweet(TT,ResultPlace) ->
           {_, Country} = lists:keyfind(<<"country_code">>, 1, L),
           CountryString = binary_to_list(Country),
           PreviousHappy = database_riak:getHappiness(CountryString, "current"),
-%            Happy = string_count(Tweet,":)") + string_count(Tweet,"(:"),
-%            Sadness = string_count(Tweet,"):") + string_count(Tweet,":("),
           PreviousTime = database_riak:getTimestamp(CountryString),
           {_, Time, _} = now(),
           if Time - PreviousTime >= 60 ->
@@ -51,10 +49,3 @@ add_tweet(TT,ResultPlace) ->
       end;
     X -> io:format("Something: ~p ~n",X)
   end.
-
-%happy_smileys_list()->[":)", "(:", ":D"].
-
-%sad_smileys_list() -> [":/", ":(" ,"):", ":'("].
-
-%% put_into_database(happiness,countrycode)->
-%%   database_riak:put(happiness,countrycode).

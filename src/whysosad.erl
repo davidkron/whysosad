@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author David
-%%% @copyright (C) 2014, <COMPANY>
+%%% @copyright (C) 2014, Pegasus
 %%% @doc
 %%%
 %%% @end
@@ -16,8 +16,7 @@ start()->
   URL = "https://stream.twitter.com/1.1/statuses/filter.json",
   Parameters = [{delimited, length},{stall_warnings, true},{track,string:join(const:sad_smileys() ++ const:happy_smileys(),",")}],
   spawn(fun ()->httpserver:start() end),
-    twitter_loop(URL,Parameters).
- % twitterminer_source:mine(URL,Parameters).
+  twitter_loop(URL,Parameters).
 
 twitter_loop(URL, Parameters)->
     twitterminer_source:mine(URL,Parameters),

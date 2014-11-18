@@ -10,7 +10,7 @@
 -author("Simeon").
 
 %% API
--export([start/0, stop/0, getMap/1, clearMap/1, getTimestamp/1, setTimestamp/2, getHappiness/2, setHappiness/3]).
+-export([start/0, stop/0, getMap/1, clearMap/1, getTimestamp/1, setTimestamp/2, getHappiness/2, setHappiness/3, getTotal/2, setTotal/3]).
 
 start() ->
   ServerPid = whereis(sts),
@@ -73,3 +73,7 @@ setTimestamp(Country, Value) -> setData(Country, "previous", "timestamp", Value)
 getHappiness(Country, TimeFrame) -> getData(Country, TimeFrame, "value").
 
 setHappiness(Country, TimeFrame, Value) -> setData(Country, TimeFrame, "value", Value).
+
+setTotal(Country, TimeFrame, Value) -> setData(Country, TimeFrame, "total", Value).
+
+getTotal(Country, TimeFrame) -> getData(Country, TimeFrame, "total").

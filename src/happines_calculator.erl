@@ -34,11 +34,14 @@ add_tweet(TT,ResultPlace) ->
 %            Happy = string_count(Tweet,":)") + string_count(Tweet,"(:"),
 %            Sadness = string_count(Tweet,"):") + string_count(Tweet,":("),
           PreviousTime = database_riak:getTimestamp(CountryString),
+          PreviousTotalTweets = database_riak:getTotal(CountryString, "current"),
           {_, Time, _} = now(),
           if Time - PreviousTime >= 60 ->
             database_riak:setTimestamp(CountryString, Time),
             database_riak:setHappiness(CountryString, "previous", PreviousHappy),
-            database_riak:setHappiness(CountryString, "current", 0);
+            database_riak:setHappiness(CountryString, "current", 0),
+            database_riak:setTotal(CountryString, "previous", PreviousTotalTweets),
+            database_riak:setTotal(CountryString, "current", 0);
           true ->
             Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),
             Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:sad_smileys()]),
@@ -46,7 +49,8 @@ add_tweet(TT,ResultPlace) ->
                 Happy > Sadness -> database_riak:setHappiness(CountryString, "current", PreviousHappy + 1);
                 Sadness > Happy -> database_riak:setHappiness(CountryString, "current", PreviousHappy - 1);
                 Sadness == Happy -> ok
-              end
+              end,
+            database_riak:setTotal(CountryString, "current", PreviousTotalTweets + 1)
           end
       end;
     X -> io:format("Something: ~p ~n",X)

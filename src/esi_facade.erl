@@ -2,7 +2,7 @@
 -export([current_happiness/3, previous_happiness/3, happiness_change/3, current_total/3, previous_total/3]).
 
 getPropertyValue(TimeFrame, Value) ->
-  Map = database_riak:getMap("countries"),
+  Map = database:fetchMap("countries"),
   Countries = maps:keys(Map),
   KeyValues  = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(maps:get(Value, maps:get(TimeFrame, maps:get(Country,Map)))) || Country<-Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".

@@ -10,21 +10,23 @@
 -author("David").
 
 %% API
--export([]).
+-export([place_bet/4,get_all_bet_status/1]).
 
 current_time() -> {_, Time, _} = now(), Time.
 
-place_bet(Country,TargetTime,TargetStatus) when (TargetStatus /= happier) and (TargetStatus /= sadder) ->
+place_bet(_,_,_,TargetStatus) when (TargetStatus /= happier) and (TargetStatus /= sadder) ->
 erlang:error(please_use_happier_or_sadder_as_targetstatus);
 
-place_bet(Country,TargetTime,TargetStatus)->
+place_bet(UserName,Country,TargetTime,TargetStatus)->
 PlacedTime = current_time(),
-database:put({bets,{Country,PlacedTime,TargetTime,TargetStatus}}).
+database:put({{bets,UserName},{Country,PlacedTime,TargetTime,TargetStatus}}).
 
-get_users_bets()-> [{bets,{"Sweden",1,10,happier}}]. %Not implemented
+get_users_bets(UserName)->%TODO: Not implemented
+  CurrentTime = current_time(),%Not implemented
+  [{bets,{"Sweden",CurrentTime,CurrentTime + 1,happier}}]. %Not implemented
 
 get_all_bet_status(UserName) ->
-Bets = get_users_bets(),
+Bets = get_users_bets(UserName),
 Statuses = [get_bet_status(Country,PlacedTime,TargetTime,TargetHappiness,checktime) || {bets,{Country,PlacedTime,TargetTime,TargetHappiness}}<-Bets]
 ,Statuses.
 

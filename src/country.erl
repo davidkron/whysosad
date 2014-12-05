@@ -10,7 +10,7 @@
 -author("Simeon").
 
 %% API
--export([getTimestamp/1, setTimestamp/2, getHappiness/2, setHappiness/3, setTotal/3, getTotal/2]).
+-export([getHappiness/2, setHappiness/3, setTotal/3, getTotal/2]).
 
 setCountryData(Country, TimeFrame, Key, Value) ->
   CountriesMap = database:fetchMap("countries"),
@@ -26,10 +26,6 @@ getCountryData(Country, TimeFrame, Key) ->
   CountryMap = maps:get(Country, CountriesMap, #{}),
   TimeFrameMap = maps:get(TimeFrame, CountryMap, #{}),
   maps:get(Key, TimeFrameMap, 0).
-
-getTimestamp(Country) -> getCountryData(Country, "previous", "timestamp").
-
-setTimestamp(Country, Value) -> setCountryData(Country, "previous", "timestamp", Value).
 
 getHappiness(Country, TimeFrame) -> getCountryData(Country, TimeFrame, "value").
 

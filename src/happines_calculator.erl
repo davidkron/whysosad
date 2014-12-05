@@ -27,28 +27,20 @@ add_tweet(TT,ResultPlace) ->
         null -> ok;
         {L} ->
           Tweet = binary_to_list(TT),
-          {_, Country} = lists:keyfind(<<"country_code">>, 1, L),
-          CountryString = binary_to_list(Country),
-          PreviousHappy = country:getHappiness(CountryString, "current"),
-          PreviousTime = country:getTimestamp(CountryString),
-          PreviousTotalTweets = country:getTotal(CountryString, "current"),
-          {_, Time, _} = now(),
-          if Time - PreviousTime >= 60 ->
-            country:setTimestamp(CountryString, Time),
-            country:setHappiness(CountryString, "previous", PreviousHappy),
-            country:setHappiness(CountryString, "current", 0),
-            country:setTotal(CountryString, "previous", PreviousTotalTweets),
-            country:setTotal(CountryString, "current", 0);
-          true ->
-            Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),
-            Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:sad_smileys()]),
-              if
-                Happy > Sadness -> country:setHappiness(CountryString, "current", PreviousHappy + 1);
-                Sadness > Happy -> country:setHappiness(CountryString, "current", PreviousHappy - 1);
-                Sadness == Happy -> ok
-              end,
-            country:setTotal(CountryString, "current", PreviousTotalTweets + 1)
-          end
+          {_, Time_ms, _} = now(),
+          Time = Time_ms div 60,
+          {_, CountryCode} = lists:keyfind(<<"country_code">>, 1, L),
+          Country = binary_to_list(CountryCode),
+          PreviousHappy = country:getHappiness(Country, Time),
+          PreviousTotalTweets = country:getTotal(Country, Time),
+          Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),
+          Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:sad_smileys()]),
+          if
+            Happy > Sadness -> country:setHappiness(Country, Time, PreviousHappy + 1);
+            Sadness > Happy -> country:setHappiness(Country, Time, PreviousHappy - 1);
+            Sadness == Happy -> ok
+          end,
+          country:setTotal(Country, Time, PreviousTotalTweets + 1)
       end;
     X -> io:format("Something: ~p ~n",X)
   end.

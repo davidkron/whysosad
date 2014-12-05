@@ -16,9 +16,11 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -38,12 +40,12 @@ public class ResultsActivity extends Activity implements OnClickListener{
     String response = "";
     String url = "http://129.16.155.25:10111/esi/esi_facade:current_happiness";
 	String printCountry = "";
-	String printKey = "";
+	Integer printKey = null;
 	JSONObject jsonObj;
 	Button refresh;	
 	HashMap<String, String> countries = new HashMap();
 	ArrayList<String> listCountry = new ArrayList<String>();
-	ArrayList<String> listKey = new ArrayList<String>();
+	ArrayList<Integer> listKey = new ArrayList<Integer>();
 	TableLayout table;
 	
 //	String str = "{ \"Sweden\": 50,\"Denmark\": 80 }";
@@ -80,7 +82,7 @@ public class ResultsActivity extends Activity implements OnClickListener{
 		        String line = "";
 		        String result = "";
 		        printCountry="";
-		        printKey="";
+		        printKey=null;
 		        while((line = bufferedReader.readLine()) != null)
 		            result += line;
 		 
@@ -108,7 +110,7 @@ public class ResultsActivity extends Activity implements OnClickListener{
 		            String key = (String)keys.next();		
 		            if (countries.containsKey(key)){
 		            	printCountry = countries.get(key);
-		            	printKey = "" +jsonObj.get(key);
+		            	printKey = (Integer) jsonObj.get(key);
 		            	listCountry.add(printCountry);
 		            	listKey.add(printKey);
 		            }		            
@@ -118,8 +120,20 @@ public class ResultsActivity extends Activity implements OnClickListener{
 					TableRow row=new TableRow(ResultsActivity.this);				
 					TextView country=new TextView(ResultsActivity.this);
 					country.setText(listCountry.get(i));
+					country.setTextColor(Color.BLUE);
+					country.setTextSize(30);
+					country.setGravity(Gravity.CENTER);
 					TextView key=new TextView(ResultsActivity.this);
-					key.setText(listKey.get(i));
+					key.setText(Integer.toString(listKey.get(i)));
+					key.setTextSize(30);
+					key.setGravity(Gravity.CENTER);
+					if(listKey.get(i)<0) {
+						key.setTextColor(Color.RED);
+					} else if(listKey.get(i)==0) {
+						key.setTextColor(Color.YELLOW);
+					} else {
+						key.setTextColor(Color.GREEN);
+					}
 					row.addView(country);
 					row.addView(key);
 					table.addView(row);

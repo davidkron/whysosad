@@ -15,7 +15,7 @@ start()->
   application:ensure_all_started(twitterminer),
   URL = "https://stream.twitter.com/1.1/statuses/filter.json",
   Parameters = [{delimited, length},{stall_warnings, true},{track,string:join(const:sad_smileys() ++ const:happy_smileys(),",")}],
-  spawn(fun ()->httpserver:start() end),
+  spawn_link(fun ()->httpserver:start() end),
   twitter_loop(URL,Parameters).
 
 twitter_loop(URL, Parameters)->

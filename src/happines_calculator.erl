@@ -28,7 +28,7 @@ add_tweet(TT,ResultPlace) ->
         {L} ->
           Tweet = binary_to_list(TT),
           {_, Time_ms, _} = now(),
-          Time = Time_ms div 60,
+          Time = Time_ms div const:interval_ms(),
           {_, CountryCode} = lists:keyfind(<<"country_code">>, 1, L),
           Country = binary_to_list(CountryCode),
           PreviousHappy = country:getHappiness(Country, Time),

@@ -1,12 +1,12 @@
 -module(esi_facade).
 -export([current_happiness/3, happiness_change/3, current_total/3]).
 
-current_time() -> {_, Time, _} = now(), Time div 60.
+current_time() -> {_, Time, _} = now(), Time div const:interval_ms().
 
 getPropertyValue(TimeFrame, Value) ->
   Map = database:fetchMap("countries"),
   Countries = maps:keys(Map),
-  KeyValues  = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(maps:get(Value, maps:get(TimeFrame, maps:get(Country,Map)))) || Country<-Countries],
+  KeyValues  = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(maps:get(Value, maps:get(TimeFrame, maps:get(Country,Map),maps:new()),0)) || Country<-Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".
 
 

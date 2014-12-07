@@ -10,7 +10,7 @@
 -author("Simeon").
 
 %% API
--export([start/0, stop/0, store/2, fetch/1, fetchMap/1, remove/1]).
+-export([start/0, stop/0, store/2, fetch/1, fetchMap/1, remove/1, store_in_store/3]).
 
 start() ->
   ServerPid = whereis(sts),
@@ -37,6 +37,9 @@ stop()-> ServerPid = whereis(sts),
       end;
     true -> already_stopped
   end.
+
+store_in_store(Key1, Key2, Value) ->
+  store(Key1, maps:put(Key2, Value, fetch(Key1))).
 
 store(Key, Value) ->
   if is_map(Value) == true ->

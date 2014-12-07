@@ -10,7 +10,7 @@
 -author("Simeon").
 
 %% API
--export([add/2, remove/1, changePassword/2, authenticate/2]).
+-export([add/2, remove/1, changePassword/2, authenticate/2, authenticated_action/3, fund/2]).
 
 add(RawUserName, Password) ->
   ValidUserName = validateUserName(RawUserName),
@@ -28,10 +28,26 @@ add(RawUserName, Password) ->
         true ->
           Salt = binary_to_list(crypto:strong_rand_bytes(64)),
           SecurePassword = crypto:hash(sha512, Password ++ Salt),
-          NewUsersMap = maps:put(UserName, #{"password" => SecurePassword, "ruid" => Salt}, UsersMap),
+          NewUsersMap = maps:put(UserName, #{"password" => SecurePassword, "ruid" => Salt, "credits"=>100}, UsersMap),
           database:store("users", NewUsersMap)
       end
   end.
+
+fund(UserName, CreditsChange) ->
+  UsersMap = database:fetchMap("users"),
+  User = maps:get(UserName, UsersMap, false),
+  PreviousCredits = maps:get("Credits", User),
+  if
+    CreditsChange < 0 and PreviousCredits + CreditsChange < 0 ->
+      throw("Not enough credits for credit change");
+    true ->
+      NewUser = maps:put("Credits", PreviousCredits + CreditsChange, User),
+      NewUsersMap = maps:put(UserName, NewUser, UsersMap),
+      database:store("users", NewUsersMap)
+  end.
+
+
+
 
 remove(RawUserName) ->
   UserName = string:to_lower(RawUserName),
@@ -82,6 +98,12 @@ validatePassword(Password) ->
     false;
     true ->
       ok
+  end.
+
+authenticated_action(UserName, Password, Fun) ->
+  case users:authenticate(UserName, Password) of
+    ok -> Fun();
+    Error -> Error
   end.
 
 authenticate(RawUserName, Password) ->

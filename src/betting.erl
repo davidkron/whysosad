@@ -10,55 +10,84 @@
 -author("David").
 
 %% API
--export([place_bet/5, get_all_bet_status/1]).
+-export([place_bet/6, get_all_bet_status/2, get_users_bets/2]).
 
 current_time() -> {_, Time, _} = now(), Time.
 
 
-place_bet(UserName, Password, Country, TargetTime, TargetStatus) ->
-  case users:authenticate(UserName, Password) of
-    ok ->
-      erlang:display("Ok"),
+place_bet(UserName, Password, Country, TargetTime, TargetStatus, Credits) ->
+  users:authenticated_action(UserName, Password, fun() ->
       Status = case TargetStatus of
                  "happier" -> happier;
                  "sadder" -> sadder;
                  _ -> {false, invalid_targetstatus}
                end,
-      PlacedTime = current_time(),
-      Bets = database:fetch({bets, UserName}),
-      database:store({bets, UserName}, [{Country, PlacedTime, TargetTime, Status} | Bets]), ok;
-    Error -> Error
+    PlacedTime = current_time(), % The time the user placed the bet
+    users:fund(UserName, -Credits), % Take away the amount of credits the user is betting for now
+    Bets = database:fetchMap("bets"),
+    UserBets = maps:get(UserName, Bets, []),
+    Newbet =
+      #{country=>Country, placedtime=>PlacedTime, targettime=>TargetTime,
+        targetstatus=>Status, credits=>Credits, odds=>get_odds(Country, TargetTime, TargetStatus), funded=>false},
+    NewBets = maps:put(UserName, [Newbet | UserBets], Bets),
+    database:store("bets", NewBets)
+  end).
+
+get_users_bets(UserName, Password) ->
+  users:authenticated_action(UserName, Password, fun() ->
+    Bets = database:fetchMap("bets"),
+    maps:get(UserName, Bets, [])
+  end).
+
+get_all_bet_status(UserName, Password) ->
+  users:authenticated_action(UserName, Password, fun() ->
+    Bets = get_users_bets(UserName, Password),
+    Statuses = [get_bet_status(Bet) || Bet <- Bets],
+    %Fund any unfunded winning bets, and overwrite the previous bets as "funded"
+    NewBets = [fund(UserName, Status, Bet) || Status <- Statuses, Bet <- Bets],
+    database:store_in_store("bets", UserName, NewBets),
+    Statuses
+  end).
+
+get_bet_status(Bet) ->
+  CurrentTime = current_time(),
+  Country = maps:get(country, Bet),
+  TargetTime = maps:get(targettime, Bet),
+  TargetHappiness = maps:get(targethapiness, Bet),
+  PlacedTime = maps:get(placedtime, Bet),
+  PlacedTime = maps:get(placedtime, Bet),
+  if
+    TargetTime < CurrentTime -> inprogress;
+    true ->
+      Later = country:getHappiness(Country, TargetTime) / country:getTotal(Country, TargetTime),
+      Prev = country:getHappiness(Country, PlacedTime) / country:getTotal(Country, PlacedTime),
+      get_bet_status(Prev, Later, TargetHappiness)
   end.
 
-get_users_bets(UserName) ->
-  database:fetch({bets, UserName}).
-
-get_all_bet_status(UserName) ->
-Bets = get_users_bets(UserName),
-Statuses = [get_bet_status(Country,PlacedTime,TargetTime,TargetHappiness,checktime) || {bets,{Country,PlacedTime,TargetTime,TargetHappiness}}<-Bets]
-,Statuses.
-
-get_bet_status(Country,PlacedTime,TargetTime,TargetHappiness,checktime) ->
-CurrentTime = current_time(),
-if
- TargetTime < CurrentTime -> inprogress;
- true -> get_bet_status(Country,PlacedTime,TargetTime,TargetHappiness)
-end.
-
-get_bet_status(Country,PlacedTime,Time,TargetHappiness) ->
-Curr = country:getHappiness(Country, Time) / country:getTotal(Country, Time),
-Prev = country:getHappiness(Country, PlacedTime) / country:getTotal(Country, PlacedTime),
-get_bet_status(Prev,Curr,TargetHappiness).
-
-get_bet_status(Prev,Curr,sadder) when Curr < Prev -> won;
-get_bet_status(Prev,Curr,sadder) when Curr > Prev  -> loose;
-get_bet_status(Prev,Curr,happier) when Curr > Prev -> won;
-get_bet_status(Prev,Curr,happier) when Curr < Prev  -> loose;
+get_bet_status(Prev, Later, sadder) when Later < Prev -> won;
+get_bet_status(Prev, Later, sadder) when Later > Prev -> loose;
+get_bet_status(Prev, Later, happier) when Later > Prev -> won;
+get_bet_status(Prev, Later, happier) when Later < Prev -> loose;
 get_bet_status(Prev,Prev,sadder) -> tie;
 get_bet_status(Prev,Prev,happier) -> tie.
 
-get_odds(Country,Time,Hapiness)->
-database:count({bets,{Country,Time,Hapiness}})
-/
-database:count({bets,{Country,Time,1-Hapiness}}).
+fund(Username, Status, Bet) ->
+  Funded = maps:get(funded, Bet),
+  case Funded of
+    false ->
+      Newbet = maps:put(funded, true, Bet),
+      Credits = maps:get(credits, Bet),
+      case Status of
+        tie ->
+          users:fund(Username, Credits), Newbet; % Tie, give user his money back 100%
+        won ->
+          Odds = maps:get(odds, Bet),
+          users:fund(Username, Credits * Odds), Newbet; % win, give odds% of money back
+        loose -> Newbet % Loose, user dont get his money back
+      end;
+    true ->
+      Bet
+  end.
 
+get_odds(_Country, _Time, _Hapiness) -> 1.5.
+%database:count({bets,{Country,Time,Hapiness}}) / database:count({bets,{Country,Time,1-Hapiness}}).

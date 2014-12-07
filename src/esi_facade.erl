@@ -1,22 +1,60 @@
 -module(esi_facade).
--export([current_happiness/3, place_bet/3]).
+-import(proplists, [get_value/2]).
+-export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3]).
 
 current_time() -> {_, Time, _} = now(), Time div const:interval_ms().
 
 safe_deliver(Sid, Fun) ->
   try Fun() of
-    {false, Error} -> erlang:display(Error), mod_esi:deliver(Sid, "Error: " ++ atom_to_list(Error));
+    {false, Error} -> mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
+    ok -> mod_esi:deliver(Sid, "Sucess");
     Result -> mod_esi:deliver(Sid, Result)
   catch
-    Error -> erlang:display(Error), mod_esi:deliver(Sid, Error)
+    Error -> mod_esi:deliver(Sid, "{Error:" ++ Error ++ "}")
   end.
 
-current_happiness(Sid, _Env, _In) -> safe_deliver(Sid, fun() ->
+current_happiness(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
+  Args = httpd:parse_query(Input),
+  ApiKey = required_param("apikey", Args),
+  validate_apikey(ApiKey),
   getPropertyValue(current_time(), "value")
 end).
 
+validate_apikey(Key) ->
+  case Key of
+    "23jk4n823nasdf23rgdf" -> ok;
+    _ -> throw("Unknown api key")
+  end.
+
+required_param(Param, Args) ->
+  case get_value(Param, Args) of
+    undefined -> throw("Missing parameter '" ++ Param ++ "'");
+    X -> X
+  end.
+
 place_bet(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
-  place_bet(httpd:parse_query(Input))
+  Args = httpd:parse_query(Input),
+  User = required_param("user", Args),
+  Password = required_param("password", Args),
+  Country = required_param("country", Args),
+  TargetTime = required_param("targettime", Args),
+  TargetStatus = required_param("targetstatus", Args),
+  Credits = required_param("credits", Args),
+  betting:place_bet(User, Password, Country, TargetTime, TargetStatus, Credits)
+end).
+
+register_user(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
+  Args = httpd:parse_query(Input),
+  User = required_param("user", Args),
+  Password = required_param("password", Args),
+  users:add(User, Password)
+end).
+
+get_all_bets(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
+  Args = httpd:parse_query(Input),
+  User = required_param("user", Args),
+  Password = required_param("password", Args),
+  erlang:display(betting:get_users_bets(User, Password))
 end).
 
 getPropertyValue(TimeFrame, Value) ->
@@ -24,11 +62,3 @@ getPropertyValue(TimeFrame, Value) ->
   Countries = maps:keys(Map),
   KeyValues  = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(maps:get(Value, maps:get(TimeFrame, maps:get(Country,Map),maps:new()),0)) || Country<-Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".
-
-place_bet(Args) ->
-  User = proplists:get_value("user", Args),
-  Password = proplists:get_value("password", Args),
-  Country = proplists:get_value("country", Args),
-  TargetTime = proplists:get_value("targettime", Args),
-  TargetStatus = proplists:get_value("targetstatus", Args),
-  betting:place_bet(User, Password, Country, TargetTime, TargetStatus).

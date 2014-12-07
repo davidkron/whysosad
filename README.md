@@ -1,20 +1,12 @@
 1.  Compile the dependencies and the package
 
-        $ rebar compile
-
+        $ ./rebar compile
 2.  Run
 
-    Run the Erlang shell from the repo's toplevel directory with additional library path and configuration flags
+    Run in shell
 
-        $ erl -pa deps/*/ebin -pa ebin -config twitterminer
+        $ sh run
 
-    Now you are ready to run your example.
-
-    ```erlang
-    2> whysosad:start().
-    ```
-
-    If everything goes OK, you should see a stream of tweets running for 60 s. If you get a message indicating HTTP response code 401, it probably means authentication error.
 
 ## Dependencies
 

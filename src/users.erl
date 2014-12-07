@@ -38,7 +38,7 @@ fund(UserName, CreditsChange) ->
   User = maps:get(UserName, UsersMap, false),
   PreviousCredits = maps:get("Credits", User),
   if
-    CreditsChange < 0 and PreviousCredits + CreditsChange < 0 ->
+    (CreditsChange < 0) and (PreviousCredits + CreditsChange < 0) ->
       throw("Not enough credits for credit change");
     true ->
       NewUser = maps:put("Credits", PreviousCredits + CreditsChange, User),

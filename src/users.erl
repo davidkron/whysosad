@@ -35,8 +35,8 @@ add(RawUserName, Password) ->
 
 fund(UserName, CreditsChange) ->
   UsersMap = database:fetchMap("users"),
-  User = maps:get(UserName, UsersMap, false),
-  PreviousCredits = maps:get("Credits", User),
+  User = maps:get(UserName, UsersMap),
+  PreviousCredits = maps:get("credits", User),
   if
     (CreditsChange < 0) and (PreviousCredits + CreditsChange < 0) ->
       throw("Not enough credits for credit change");

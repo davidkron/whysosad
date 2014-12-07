@@ -29,8 +29,7 @@ place_bet(UserName, Password, Country, TargetTime, TargetStatus, Credits) ->
     Newbet =
       #{country=>Country, placedtime=>PlacedTime, targettime=>TargetTime,
         targetstatus=>Status, credits=>Credits, odds=>get_odds(Country, TargetTime, TargetStatus), funded=>false},
-    NewBets = maps:put(UserName, [Newbet | UserBets], Bets),
-    database:store("bets", NewBets)
+    database:store_in_store("bets", UserName, [Newbet | UserBets])
   end).
 
 get_users_bets(UserName, Password) ->

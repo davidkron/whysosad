@@ -10,6 +10,7 @@ safe_deliver(Sid, Fun) ->
     ok -> mod_esi:deliver(Sid, "Sucess");
     Result -> mod_esi:deliver(Sid, Result)
   catch
+    error:Error -> mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
     Error -> mod_esi:deliver(Sid, "{Error:" ++ Error ++ "}")
   end.
 
@@ -26,6 +27,8 @@ validate_apikey(Key) ->
     _ -> throw("Unknown api key")
   end.
 
+required_param_int(Param, Args) -> list_to_integer(required_param(Param, Args)).
+
 required_param(Param, Args) ->
   case get_value(Param, Args) of
     undefined -> throw("Missing parameter '" ++ Param ++ "'");
@@ -37,9 +40,9 @@ place_bet(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   User = required_param("user", Args),
   Password = required_param("password", Args),
   Country = required_param("country", Args),
-  TargetTime = required_param("targettime", Args),
+  TargetTime = required_param_int("targettime", Args),
   TargetStatus = required_param("targetstatus", Args),
-  Credits = required_param("credits", Args),
+  Credits = required_param_int("credits", Args),
   betting:place_bet(User, Password, Country, TargetTime, TargetStatus, Credits)
 end).
 

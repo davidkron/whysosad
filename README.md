@@ -7,6 +7,12 @@
 
         $ sh run
 
+Alternativly
+
+    Compile and run
+
+        $ sh compilerun
+
 
 ## Dependencies
 

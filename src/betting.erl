@@ -10,20 +10,28 @@
 -author("David").
 
 %% API
--export([place_bet/4,get_all_bet_status/1]).
+-export([place_bet/5, get_all_bet_status/1]).
 
 current_time() -> {_, Time, _} = now(), Time.
 
-place_bet(_,_,_,TargetStatus) when (TargetStatus /= happier) and (TargetStatus /= sadder) ->
-erlang:error(please_use_happier_or_sadder_as_targetstatus);
 
-place_bet(UserName,Country,TargetTime,TargetStatus)->
-PlacedTime = current_time(),
-database:put({{bets,UserName},{Country,PlacedTime,TargetTime,TargetStatus}}).
+place_bet(UserName, Password, Country, TargetTime, TargetStatus) ->
+  case users:authenticate(UserName, Password) of
+    ok ->
+      erlang:display("Ok"),
+      Status = case TargetStatus of
+                 "happier" -> happier;
+                 "sadder" -> sadder;
+                 _ -> {false, invalid_targetstatus}
+               end,
+      PlacedTime = current_time(),
+      Bets = database:fetch({bets, UserName}),
+      database:store({bets, UserName}, [{Country, PlacedTime, TargetTime, Status} | Bets]), ok;
+    Error -> Error
+  end.
 
-get_users_bets(UserName)->%TODO: Not implemented
-  CurrentTime = current_time(),%Not implemented
-  [{bets,{"Sweden",CurrentTime,CurrentTime + 1,happier}}]. %Not implemented
+get_users_bets(UserName) ->
+  database:fetch({bets, UserName}).
 
 get_all_bet_status(UserName) ->
 Bets = get_users_bets(UserName),

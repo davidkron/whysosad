@@ -10,30 +10,17 @@
 -author("Simeon").
 
 %% API
--export([getHappiness/2, setHappiness/3, setTotal/3, getTotal/2, getScore/2, getCountryData/3]).
+-export([get_happiness/2, set_happiness/3, set_total/3, get_total/2, get_score/2, decrease_happiness/2, increase_happiness/2, increase_total/2]).
 
-setCountryData(Country, TimeFrame, Key, Value) ->
-  CountriesMap = database:fetchMap("countries"),
-  CountryMap = maps:get(Country, CountriesMap, #{}),
-  TimeFrameMap = maps:get(TimeFrame, CountryMap, #{}),
-  NewTimeFrameMap = maps:put(Key, Value, TimeFrameMap),
-  NewCountryMap = maps:put(TimeFrame, NewTimeFrameMap, CountryMap),
-  NewCountriesMap = maps:put(Country, NewCountryMap, CountriesMap),
-  database:store("countries", NewCountriesMap).
 
-getCountryData(Country, TimeFrame, Key) ->
-  CountriesMap = database:fetchMap("countries"),
-  CountryMap = maps:get(Country, CountriesMap, #{}),
-  TimeFrameMap = maps:get(TimeFrame, CountryMap, #{}),
-  maps:get(Key, TimeFrameMap, 0).
+get_score(Country, TimeFrame) ->
+  db_countries:get_happiness(Country, TimeFrame) / db_countries:get_total(Country, TimeFrame).
 
-getScore(Country, TimeFrame) ->
-  country:getHappiness(Country, TimeFrame) / country:getTotal(Country, TimeFrame).
+get_happiness(Country, TimeFrame) -> db_countries:get_happiness(Country, TimeFrame).
+get_total(Country, TimeFrame) -> db_countries:get_total(Country, TimeFrame).
+set_happiness(Country, TimeFrame, Value) -> db_countries:set_happiness(Country, TimeFrame, Value).
+set_total(Country, TimeFrame, Value) -> db_countries:set_total(Country, TimeFrame, Value).
 
-getHappiness(Country, TimeFrame) -> getCountryData(Country, TimeFrame, "value").
-
-setHappiness(Country, TimeFrame, Value) -> setCountryData(Country, TimeFrame, "value", Value).
-
-setTotal(Country, TimeFrame, Value) -> setCountryData(Country, TimeFrame, "total", Value).
-
-getTotal(Country, TimeFrame) -> getCountryData(Country, TimeFrame, "total").
+increase_total(Country, TimeFrame) -> set_total(Country, TimeFrame, get_total(Country, TimeFrame) + 1).
+increase_happiness(Country, TimeFrame) -> set_happiness(Country, TimeFrame, get_happiness(Country, TimeFrame) + 1).
+decrease_happiness(Country, TimeFrame) -> set_happiness(Country, TimeFrame, get_happiness(Country, TimeFrame) - 1).

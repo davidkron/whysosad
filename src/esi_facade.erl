@@ -6,7 +6,7 @@ current_time() -> {_, Time, _} = now(), Time div const:interval_ms().
 
 safe_deliver(Sid, Fun) ->
   try Fun() of
-    {false, Error} -> mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
+    {error, Error} -> mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
     ok -> mod_esi:deliver(Sid, "Sucess");
     Result -> mod_esi:deliver(Sid, Result)
   catch
@@ -18,7 +18,7 @@ current_happiness(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   Args = httpd:parse_query(Input),
   ApiKey = required_param("apikey", Args),
   validate_apikey(ApiKey),
-  getPropertyValue(current_time(), "value")
+  happiness_json(current_time())
 end).
 
 validate_apikey(Key) ->
@@ -40,10 +40,19 @@ place_bet(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   User = required_param("user", Args),
   Password = required_param("password", Args),
   Country = required_param("country", Args),
-  TargetTime = required_param_int("targettime", Args),
+  SentHour = required_param_int("hour", Args),
+  SentMin = required_param_int("minute", Args),
   TargetStatus = required_param("targetstatus", Args),
   Credits = required_param_int("credits", Args),
-  betting:place_bet(User, Password, Country, TargetTime, TargetStatus, Credits)
+  erlang:display("Placing"),
+  {_, {Hour, Min, _}} = calendar:local_time(),
+  Timediff = SentHour * 60 + SentMin - Hour * 60 + Min,
+  case (Timediff < 0) of
+    true ->
+      betting:place_bet(User, Password, Country, current_time() + (Timediff + 24 * 60) div const:interval_ms(), TargetStatus, Credits);
+    false ->
+      betting:place_bet(User, Password, Country, current_time() + (Timediff) div const:interval_ms(), TargetStatus, Credits)
+  end
 end).
 
 register_user(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
@@ -78,8 +87,8 @@ get_user_credits(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   integer_to_list(users:get_credits(required_param("user", Args), required_param("password", Args)))
 end).
 
-getPropertyValue(TimeFrame, Value) ->
+happiness_json(TimeFrame) ->
   Map = database:fetchMap("countries"),
   Countries = maps:keys(Map),
-  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(country:getCountryData(Country, TimeFrame, Value)) || Country <- Countries],
+  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(country:get_happiness(Country, TimeFrame)) || Country <- Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".

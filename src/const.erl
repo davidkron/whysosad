@@ -13,5 +13,5 @@ sad_smileys() ->
 "(>_<)", "((+_+))", "(+o+)", "('_')", "(/_;)", "T_T", "(;_;)", "(;_;", "(;_:)", "(;O;)", "(:_;)", ";_;", ";-;", ";n;", ";;", "Q.Q", "T.T", "QQ", "Q_Q", "T_T"].
 %eastern smilies
 
-
-interval_ms()-> 120.
+%Every tenth minute
+interval_ms() -> 600.

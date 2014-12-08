@@ -31,16 +31,14 @@ add_tweet(TT,ResultPlace) ->
           Time = Time_ms div const:interval_ms(),
           {_, CountryCode} = lists:keyfind(<<"country_code">>, 1, L),
           Country = binary_to_list(CountryCode),
-          PreviousHappy = country:getHappiness(Country, Time),
-          PreviousTotalTweets = country:getTotal(Country, Time),
           Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),
           Sadness = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:sad_smileys()]),
           if
-            Happy > Sadness -> country:setHappiness(Country, Time, PreviousHappy + 1);
-            Sadness > Happy -> country:setHappiness(Country, Time, PreviousHappy - 1);
+            Happy > Sadness -> country:increase_happiness(Country, Time);
+            Sadness > Happy -> country:decrease_happiness(Country, Time);
             Sadness == Happy -> ok
           end,
-          country:setTotal(Country, Time, PreviousTotalTweets + 1)
+          country:increase_total(Country, Time)
       end;
     X -> io:format("Something: ~p ~n",X)
   end.

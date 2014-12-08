@@ -53,11 +53,24 @@ register_user(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   users:add(User, Password)
 end).
 
+
+to_list(X) when is_list(X) -> X;
+to_list(X) when is_atom(X) -> atom_to_list(X);
+to_list(X) when is_integer(X) -> integer_to_list(X);
+to_list(X) when is_float(X) -> float_to_list(X);
+to_list(X) -> erlang:display(X).
+
+map_to_json(Map) ->
+  KeyValues = ["\"" ++ to_list(Key) ++ "\"" ++ "\: " ++ to_list(maps:get(Key, Map)) || Key <- maps:keys(Map)],
+  "{" ++ string:join(KeyValues, ",") ++ "}".
+
 get_all_bets(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   Args = httpd:parse_query(Input),
   User = required_param("user", Args),
   Password = required_param("password", Args),
-  erlang:display(betting:get_users_bets(User, Password))
+  Bets = betting:get_users_bets(User, Password),
+  JsonBets = [map_to_json(Bet) || Bet <- Bets, is_map(Bet)],
+  "[" ++ string:join(JsonBets, ",") ++ "]"
 end).
 
 getPropertyValue(TimeFrame, Value) ->

@@ -62,7 +62,7 @@ fetch(handle_response, Response) ->
 fetchMap(Key) ->
   Map = fetch(Key),
   if Map == notfound ->
-    #{};
+    store(Key, #{}), #{};
   true ->
     Map
   end.

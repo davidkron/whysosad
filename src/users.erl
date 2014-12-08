@@ -28,8 +28,8 @@ add(RawUserName, Password) ->
         true ->
           Salt = binary_to_list(crypto:strong_rand_bytes(64)),
           SecurePassword = crypto:hash(sha512, Password ++ Salt),
-          NewUsersMap = maps:put(UserName, #{"password" => SecurePassword, "ruid" => Salt, "credits"=>100}, UsersMap),
-          database:store("users", NewUsersMap)
+          NewUser = #{"password" => SecurePassword, "ruid" => Salt, "credits"=>100},
+          database:store_in_store("users", UserName, NewUser)
       end
   end.
 
@@ -42,12 +42,8 @@ fund(UserName, CreditsChange) ->
       throw("Not enough credits for credit change");
     true ->
       NewUser = maps:put("Credits", PreviousCredits + CreditsChange, User),
-      NewUsersMap = maps:put(UserName, NewUser, UsersMap),
-      database:store("users", NewUsersMap)
+      database:store_in_store("users", UserName, NewUser)
   end.
-
-
-
 
 remove(RawUserName) ->
   UserName = string:to_lower(RawUserName),

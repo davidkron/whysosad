@@ -10,7 +10,7 @@
 -author("David").
 
 %% API
--export([place_bet/6, get_all_bet_status/2, get_users_bets/2]).
+-export([place_bet/6, get_users_bets/2]).
 
 current_time() -> {_, Time, _} = now(), Time.
 
@@ -34,29 +34,31 @@ place_bet(UserName, Password, Country, TargetTime, TargetStatus, Credits) ->
 
 get_users_bets(UserName, Password) ->
   users:authenticated_action(UserName, Password, fun() ->
-    Bets = database:fetchMap("bets"),
-    maps:get(UserName, Bets, [])
+    update_users_bets(UserName),
+    get_users_bets(UserName)
   end).
 
-get_all_bet_status(UserName, Password) ->
-  users:authenticated_action(UserName, Password, fun() ->
-    Bets = get_users_bets(UserName, Password),
-    Statuses = [get_bet_status(Bet) || Bet <- Bets],
-    %Fund any unfunded winning bets, and overwrite the previous bets as "funded"
-    NewBets = [fund(UserName, Status, Bet) || Status <- Statuses, Bet <- Bets],
-    database:store_in_store("bets", UserName, NewBets),
-    Statuses
-  end).
+get_users_bets(UserName) ->
+  Bets = database:fetchMap("bets"),
+  maps:get(UserName, Bets, []).
+
+update_users_bets(UserName) ->
+  Bets = get_users_bets(UserName),
+  Statuses = [get_bet_status(Bet) || Bet <- Bets],
+
+  %Fund any unfunded winning bets, and overwrite the previous bets as "funded"
+  NewBets = [fund(UserName, Status, Bet) || Status <- Statuses, Bet <- Bets],
+  database:store_in_store("bets", UserName, NewBets).
 
 get_bet_status(Bet) ->
   CurrentTime = current_time(),
   Country = maps:get(country, Bet),
   TargetTime = maps:get(targettime, Bet),
-  TargetHappiness = maps:get(targethapiness, Bet),
+  TargetHappiness = maps:get(targetstatus, Bet),
   PlacedTime = maps:get(placedtime, Bet),
   PlacedTime = maps:get(placedtime, Bet),
   if
-    TargetTime < CurrentTime -> inprogress;
+    (TargetTime < CurrentTime) -> inprogress;
     true ->
       Later = country:getHappiness(Country, TargetTime) / country:getTotal(Country, TargetTime),
       Prev = country:getHappiness(Country, PlacedTime) / country:getTotal(Country, PlacedTime),
@@ -74,11 +76,11 @@ fund(Username, Status, Bet) ->
   Funded = maps:get(funded, Bet),
   case Funded of
     false ->
-      Newbet = maps:put(funded, true, Bet),
+      Newbet = Bet#{funded=>true, status=>Status},
       Credits = maps:get(credits, Bet),
       case Status of
-        tie ->
-          users:fund(Username, Credits), Newbet; % Tie, give user his money back 100%
+        inprogress -> Newbet;
+        tie -> users:fund(Username, Credits), Newbet; % Tie, give user his money back 100%
         won ->
           Odds = maps:get(odds, Bet),
           users:fund(Username, Credits * Odds), Newbet; % win, give odds% of money back

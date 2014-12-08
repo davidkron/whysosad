@@ -1,0 +1,8 @@
+<animation-list 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"   
+    android:oneshot="true">
+    <item android:drawable="@drawable/logo" android:duration="800"/>
+    <item android:drawable="@drawable/why" android:duration="800"/>
+    <item android:drawable="@drawable/whysad" android:duration="800"/>
+    </animation-list>

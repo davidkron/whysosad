@@ -1,15 +1,15 @@
 1.  Compile the dependencies and the package
 
+
         $ ./rebar compile
+
 2.  Run
 
-    Run in shell
+Run in shell
 
         $ sh run
 
-Alternativly
-
-    Compile and run
+Alternativly Compile and run
 
         $ sh compilerun
 

@@ -21,7 +21,7 @@ http requests:
         <serverip>:10111/esi/esi_facade:register_user?user=<username>&password=<password>
         <serverip>:10111/esi/esi_facade:get_all_bets?user=<username>&password=<password>
         <serverip>:10111/esi/esi_facade:get_user_credits?user=<username>&password=<password>
-        <serverip>http://localhost:10111/esi/esi_facade:current_happiness?apikey=<apikey>
+        <serverip>:10111/esi/esi_facade:current_happiness?apikey=<apikey>
 
 ## Dependencies
 

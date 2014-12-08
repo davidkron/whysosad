@@ -3,13 +3,13 @@
         $ ./rebar compile
 2.  Run
 
-    Run in shell
+Run in shell
 
         $ sh run
 
-Alternativly
+Alternativly 
 
-    Compile and run
+Compile and run
 
         $ sh compilerun
 

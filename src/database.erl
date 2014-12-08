@@ -54,6 +54,13 @@ fetch(Key) ->
   Response = riakc_pb_socket:get(sts, <<"whysosad">>, list_to_binary(Key)),
   fetch(handle_response, Response).
 
+fetch_recursive(Bucket, [Keys]) ->
+  fetch_recursive(Keys, fetchMap(Bucket));
+fetch_recursive([Key | Keys], Map) ->
+  fetch_recursive(Keys, maps:get(Key, Map));
+fetch_recursive(Key, Map) ->
+  maps:get(Key, Map).
+
 fetch(handle_response, {error,_}) -> notfound;
 fetch(handle_response, Response) ->
   {_,{_,_,_,_,[{_,Value}],_,_}} = Response,

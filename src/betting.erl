@@ -60,8 +60,8 @@ get_bet_status(Bet) ->
   if
     (TargetTime < CurrentTime) -> inprogress;
     true ->
-      Later = country:getHappiness(Country, TargetTime) / country:getTotal(Country, TargetTime),
-      Prev = country:getHappiness(Country, PlacedTime) / country:getTotal(Country, PlacedTime),
+      Later = country:getScore(Country, TargetTime),
+      Prev = country:getScore(Country, PlacedTime),
       get_bet_status(Prev, Later, TargetHappiness)
   end.
 

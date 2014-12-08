@@ -10,7 +10,7 @@
 -author("Simeon").
 
 %% API
--export([add/2, remove/1, changePassword/2, authenticate/2, authenticated_action/3, fund/2]).
+-export([add/2, remove/1, changePassword/2, authenticate/2, authenticated_action/3, fund/2, get_credits/2]).
 
 add(RawUserName, Password) ->
   ValidUserName = validateUserName(RawUserName),
@@ -33,6 +33,15 @@ add(RawUserName, Password) ->
       end
   end.
 
+get_credits(UserName, Password) ->
+  authenticate(UserName, Password),
+  Users = database:fetchMap("users"),
+  User = maps:get(UserName, Users),
+  erlang:display(User),
+  Credits = maps:get("credits", User, 0),
+  erlang:display(Credits),
+  Credits.
+
 fund(UserName, CreditsChange) ->
   UsersMap = database:fetchMap("users"),
   User = maps:get(UserName, UsersMap),
@@ -41,7 +50,7 @@ fund(UserName, CreditsChange) ->
     (CreditsChange < 0) and (PreviousCredits + CreditsChange < 0) ->
       throw("Not enough credits for credit change");
     true ->
-      NewUser = maps:put("Credits", PreviousCredits + CreditsChange, User),
+      NewUser = maps:put("credits", PreviousCredits + CreditsChange, User),
       database:store_in_store("users", UserName, NewUser)
   end.
 
@@ -107,7 +116,7 @@ authenticate(RawUserName, Password) ->
   UsersMap = database:fetchMap("users"),
   UserMap = maps:get(UserName, UsersMap, false),
   if (UserMap == false) ->
-    {false, user_does_not_exist};
+    throw("user_does_not_exist");
     true ->
       Salt = maps:get("ruid", UserMap),
       SecurePassword = crypto:hash(sha512, Password ++ Salt),
@@ -115,6 +124,6 @@ authenticate(RawUserName, Password) ->
       if (StoredPassword == SecurePassword) ->
         ok;
         true ->
-          {false, wrong_password}
+          throw("wrong_password")
       end
   end.

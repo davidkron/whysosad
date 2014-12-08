@@ -1,6 +1,6 @@
 -module(esi_facade).
 -import(proplists, [get_value/2]).
--export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3]).
+-export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3, get_user_credits/3]).
 
 current_time() -> {_, Time, _} = now(), Time div const:interval_ms().
 
@@ -73,8 +73,13 @@ get_all_bets(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   "[" ++ string:join(JsonBets, ",") ++ "]"
 end).
 
+get_user_credits(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
+  Args = httpd:parse_query(Input),
+  integer_to_list(users:get_credits(required_param("user", Args), required_param("password", Args)))
+end).
+
 getPropertyValue(TimeFrame, Value) ->
   Map = database:fetchMap("countries"),
   Countries = maps:keys(Map),
-  KeyValues  = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(maps:get(Value, maps:get(TimeFrame, maps:get(Country,Map),maps:new()),0)) || Country<-Countries],
+  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(country:getCountryData(Country, TimeFrame, Value)) || Country <- Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".

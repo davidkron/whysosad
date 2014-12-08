@@ -10,7 +10,7 @@
 -author("Simeon").
 
 %% API
--export([getHappiness/2, setHappiness/3, setTotal/3, getTotal/2]).
+-export([getHappiness/2, setHappiness/3, setTotal/3, getTotal/2, getScore/2, getCountryData/3]).
 
 setCountryData(Country, TimeFrame, Key, Value) ->
   CountriesMap = database:fetchMap("countries"),
@@ -26,6 +26,9 @@ getCountryData(Country, TimeFrame, Key) ->
   CountryMap = maps:get(Country, CountriesMap, #{}),
   TimeFrameMap = maps:get(TimeFrame, CountryMap, #{}),
   maps:get(Key, TimeFrameMap, 0).
+
+getScore(Country, TimeFrame) ->
+  country:getHappiness(Country, TimeFrame) / country:getTotal(Country, TimeFrame).
 
 getHappiness(Country, TimeFrame) -> getCountryData(Country, TimeFrame, "value").
 

@@ -14,6 +14,15 @@ Alternativly Compile and run
         $ sh compilerun
 
 
+http requests:
+
+        <serverip>:10111/esi/esi_facade:place_bet?user=<username>&password=<password>&country=<country>&targettime=<time>&targetstatus=<happier/sadder>&credits=<credits to bet>
+        <serverip>:10111/esi/esi_facade:register_user?user=<username>&password=<password>
+        <serverip>:10111/esi/esi_facade:register_user?user=<username>&password=<password>
+        <serverip>:10111/esi/esi_facade:get_all_bets?user=<username>&password=<password>
+        <serverip>:10111/esi/esi_facade:get_user_credits?user=<username>&password=<password>
+        <serverip>http://localhost:10111/esi/esi_facade:current_happiness?apikey=<apikey>
+
 ## Dependencies
 
 ### [erlang-oauth](https://github.com/tim/erlang-oauth/)

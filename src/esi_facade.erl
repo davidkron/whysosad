@@ -2,8 +2,6 @@
 -import(proplists, [get_value/2]).
 -export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3,current_score/3, get_user_credits/3]).
 
-current_time() -> {_, Time, _} = now(), Time div const:interval_ms().
-
 safe_deliver(Sid, Fun) ->
   try Fun() of
     {error, Error} -> mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
@@ -18,14 +16,14 @@ current_happiness(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   Args = httpd:parse_query(Input),
   ApiKey = required_param("apikey", Args),
   validate_apikey(ApiKey),
-  happiness_json(current_time())
+  happiness_json(util:current_time())
 end).
 
 current_score(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   Args = httpd:parse_query(Input),
   ApiKey = required_param("apikey", Args),
   validate_apikey(ApiKey),
-  happiness_score_json(current_time())
+  happiness_score_json(util:current_time())
 end).
 
 validate_apikey(Key) ->
@@ -51,14 +49,13 @@ place_bet(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   SentMin = required_param_int("minute", Args),
   TargetStatus = required_param("targetstatus", Args),
   Credits = required_param_int("credits", Args),
-  erlang:display("Placing"),
   {_, {Hour, Min, _}} = calendar:local_time(),
-  Timediff = SentHour * 60 + SentMin - Hour * 60 + Min,
+  Timediff = (SentHour * 60 + SentMin) - (Hour * 60 + Min),
   case (Timediff < 0) of
     true ->
-      betting:place_bet(User, Password, Country, current_time() + (Timediff + 24 * 60) div const:interval_ms(), TargetStatus, Credits);
+      betting:place_bet(User, Password, Country, util:current_time() + ((Timediff + (24 * 60 * 60)) div const:interval_s()), TargetStatus, Credits);
     false ->
-      betting:place_bet(User, Password, Country, current_time() + (Timediff) div const:interval_ms(), TargetStatus, Credits)
+      betting:place_bet(User, Password, Country, util:current_time() + (Timediff div const:interval_s()), TargetStatus, Credits)
   end
 end).
 

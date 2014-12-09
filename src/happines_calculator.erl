@@ -27,8 +27,7 @@ add_tweet(TT,ResultPlace) ->
         null -> ok;
         {L} ->
           Tweet = binary_to_list(TT),
-          {_, Time_ms, _} = now(),
-          Time = Time_ms div const:interval_ms(),
+          Time = util:current_time(),
           {_, CountryCode} = lists:keyfind(<<"country_code">>, 1, L),
           Country = binary_to_list(CountryCode),
           Happy = lists:sum([string_count(Tweet,Smiley) || Smiley <- const:happy_smileys()]),

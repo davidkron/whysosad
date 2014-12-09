@@ -12,7 +12,6 @@
 %% API
 -export([get_happiness/2, set_happiness/3, set_total/3, get_total/2, get_score/2, decrease_happiness/2, increase_happiness/2, increase_total/2]).
 
-
 get_score(Country, TimeFrame) ->
   db_countries:get_happiness(Country, TimeFrame) / db_countries:get_total(Country, TimeFrame).
 

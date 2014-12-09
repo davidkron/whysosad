@@ -1,5 +1,5 @@
 -module(const).
--export([sad_smileys/0,happy_smileys/0,interval_ms/0]).
+-export([sad_smileys/0, happy_smileys/0, interval_s/0]).
 
 happy_smileys() ->
 % western smilies
@@ -14,4 +14,4 @@ sad_smileys() ->
 %eastern smilies
 
 %Every tenth minute
-interval_ms() -> 600.
+interval_s() -> 600.

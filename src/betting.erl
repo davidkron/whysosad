@@ -54,7 +54,7 @@ calculate_bet_status(Bet) ->
   TargetHappiness = maps:get(targetstatus, Bet),
   PlacedTime = maps:get(placedtime, Bet),
   if
-    (TargetTime < CurrentTime) -> inprogress;
+    (CurrentTime < TargetTime) -> inprogress;
     true ->
       Later = country:get_score(Country, TargetTime),
       Prev = country:get_score(Country, PlacedTime),

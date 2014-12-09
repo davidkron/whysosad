@@ -13,7 +13,11 @@
 -export([get_happiness/2, set_happiness/3, set_total/3, get_total/2, get_score/2, decrease_happiness/2, increase_happiness/2, increase_total/2]).
 
 get_score(Country, TimeFrame) ->
-  db_countries:get_happiness(Country, TimeFrame) / db_countries:get_total(Country, TimeFrame).
+ Total = db_countries:get_total(Country, TimeFrame),
+ case Total of
+  0 -> 0.0;
+  _ -> db_countries:get_happiness(Country, TimeFrame) / Total
+ end.
 
 get_happiness(Country, TimeFrame) -> db_countries:get_happiness(Country, TimeFrame).
 get_total(Country, TimeFrame) -> db_countries:get_total(Country, TimeFrame).

@@ -97,12 +97,12 @@ end).
 happiness_json(TimeFrame) ->
   Map = database:fetchMap("countries"),
   Countries = maps:keys(Map),
-  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ float_to_list(country:get_happiness(Country, TimeFrame)) || Country <- Countries],
+  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(country:get_happiness(Country, TimeFrame)) || Country <- Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".
   
 happiness_score_json(TimeFrame) ->
   Map = database:fetchMap("countries"),
   Countries = maps:keys(Map),
-  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(country:get_score(Country, TimeFrame)) || Country <- Countries],
+  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ float_to_list(country:get_score(Country, TimeFrame)) || Country <- Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".  
   

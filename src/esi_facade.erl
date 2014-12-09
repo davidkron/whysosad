@@ -21,6 +21,13 @@ current_happiness(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   happiness_json(current_time())
 end).
 
+current_score(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
+  Args = httpd:parse_query(Input),
+  ApiKey = required_param("apikey", Args),
+  validate_apikey(ApiKey),
+  happiness_score_json(current_time())
+end).
+
 validate_apikey(Key) ->
   case Key of
     "23jk4n823nasdf23rgdf" -> ok;
@@ -90,5 +97,12 @@ end).
 happiness_json(TimeFrame) ->
   Map = database:fetchMap("countries"),
   Countries = maps:keys(Map),
-  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(country:get_happiness(Country, TimeFrame)) || Country <- Countries],
+  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ float_to_list(country:get_happiness(Country, TimeFrame)) || Country <- Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".
+  
+happiness_score_json(TimeFrame) ->
+  Map = database:fetchMap("countries"),
+  Countries = maps:keys(Map),
+  KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ integer_to_list(country:get_score(Country, TimeFrame)) || Country <- Countries],
+  "{" ++ string:join(KeyValues,",") ++ "}".  
+  

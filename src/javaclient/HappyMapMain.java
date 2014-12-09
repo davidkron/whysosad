@@ -8,7 +8,7 @@ public class HappyMapMain {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		 
-		String URL = "http://129.16.155.25:8099/esi/esi_facade:current_happiness";
+		String URL = "http://129.16.155.25:10111/esi/esi_facade:current_happiness";
 		DataCollector dc = new DataCollector (URL);
 		
 		

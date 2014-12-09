@@ -1,6 +1,6 @@
 -module(esi_facade).
 -import(proplists, [get_value/2]).
--export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3, get_user_credits/3]).
+-export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3,current_score/3, get_user_credits/3]).
 
 current_time() -> {_, Time, _} = now(), Time div const:interval_ms().
 

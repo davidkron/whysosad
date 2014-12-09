@@ -15,9 +15,9 @@
 
 get_score(Country, TimeFrame) ->
  Total = db_countries:get_total(Country, TimeFrame),
- if Total == 0 -> 0;
-	true -> 	
-  db_countries:get_happiness(Country, TimeFrame) / Total
+ case Total of
+  0 -> 0.0;
+  _ -> db_countries:get_happiness(Country, TimeFrame) / Total
  end.
 
 get_happiness(Country, TimeFrame) -> db_countries:get_happiness(Country, TimeFrame).

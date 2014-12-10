@@ -8,7 +8,8 @@ safe_deliver(Sid, Fun) ->
     ok -> mod_esi:deliver(Sid, "Sucess");
     Result -> mod_esi:deliver(Sid, Result)
   catch
-    error:Error -> mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
+    error:Error -> erlang:display(erlang:get_stacktrace()),
+      mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
     Error -> mod_esi:deliver(Sid, "{Error:" ++ Error ++ "}")
   end.
 

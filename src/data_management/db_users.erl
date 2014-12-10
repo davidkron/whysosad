@@ -21,7 +21,7 @@ get_user(UserName) ->
   end.
 
 exists(UserName) ->
-  try db_users:get(UserName)
+  try get_user(UserName)
   of _ -> true
   catch "user_does_not_exist" -> false
   end.

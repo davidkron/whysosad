@@ -1,6 +1,6 @@
 -module(esi_facade).
 -import(proplists, [get_value/2]).
--export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3,current_score/3, get_user_credits/3]).
+-export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3,current_score/3, get_user_credits/3, total_users/3]).
 
 safe_deliver(Sid, Fun) ->
   try Fun() of
@@ -67,6 +67,11 @@ register_user(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   users:add(User, Password)
 end).
 
+total_users(Sid, _Env, _Input) -> safe_deliver(Sid, fun() ->
+  Users = database:fetchMap("users")
+  Usernames = maps:keys(Users),
+  integer_to_list(length(Usernames))
+end).
 
 to_list(X) when is_list(X) -> X;
 to_list(X) when is_atom(X) -> atom_to_list(X);
@@ -103,4 +108,7 @@ happiness_score_json(TimeFrame) ->
   Countries = maps:keys(Map),
   KeyValues = ["\"" ++ Country ++ "\"" ++ "\: " ++ float_to_list(country:get_score(Country, TimeFrame)) || Country <- Countries],
   "{" ++ string:join(KeyValues,",") ++ "}".  
+  
+  
+  
   

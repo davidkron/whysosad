@@ -68,7 +68,7 @@ register_user(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
 end).
 
 total_users(Sid, _Env, _Input) -> safe_deliver(Sid, fun() ->
-  Users = database:fetchMap("users")
+  Users = database:fetchMap("users"),
   Usernames = maps:keys(Users),
   integer_to_list(length(Usernames))
 end).

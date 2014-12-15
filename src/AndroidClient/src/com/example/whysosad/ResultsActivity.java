@@ -21,7 +21,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,7 +39,7 @@ public class ResultsActivity extends Activity implements OnClickListener{
 
 	InputStream input = null;
     String response = "";
-    String url = "http://129.16.155.25:10111/esi/esi_facade:current_happiness";
+    String url = "http://129.16.155.25:10111/esi/esi_facade:current_happiness?apikey=23jk4n823nasdf23rgdf";
 	String printCountry = "";
 	String printKey;
 	JSONObject jsonObj;

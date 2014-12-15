@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 /**
  * 
@@ -21,7 +22,8 @@ public class BetActivity extends Activity implements OnClickListener {
 	String betCountry;
 	String betKey;
 	String predictLevel;
-	String timeFrame;
+	String hour;
+	String minutes;
 	Button done;
 	Button back;
 	TextView textView1;
@@ -29,24 +31,29 @@ public class BetActivity extends Activity implements OnClickListener {
 	CheckBox night;
 	RadioButton increase;
 	RadioButton decrease;
+	TimePicker timePicker1;
+	TextView textView2;
+	TextView textView3;
+	
 	
 	protected void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
     	setContentView(R.layout.bet_layout);
+    	
+    	textView2 = (TextView)findViewById(R.id.textView2);
+    	textView3 = (TextView)findViewById(R.id.textView3);
     	
     	done = (Button)findViewById(R.id.done);
     	done.setOnClickListener(this);
     	back = (Button)findViewById(R.id.back);
     	back.setOnClickListener(this);
     	textView1 = (TextView)findViewById(R.id.textView1);
-    	day = (CheckBox)findViewById(R.id.day);
-    	day.setOnClickListener(this);
-    	night = (CheckBox)findViewById(R.id.night);
-    	night.setOnClickListener(this);
     	increase = (RadioButton)findViewById(R.id.increase);
     	increase.setOnClickListener(this);
     	decrease = (RadioButton)findViewById(R.id.decrease);
     	decrease.setOnClickListener(this);
+    	
+    	timePicker1 = (TimePicker)findViewById(R.id.timePicker1);
 	
     	Intent changeView = getIntent();
     	betCountry = changeView.getStringExtra("country");
@@ -57,23 +64,23 @@ public class BetActivity extends Activity implements OnClickListener {
 	
 	}
 
+	
+		
 	@Override
 	public void onClick(View v) {
 		
 		if(v.getId()==R.id.done) {
-			//to do
-			//send the relevant info (betCountry, betKey, predictLevel, timeFrame) to the server
+			hour = timePicker1.getCurrentHour() + "";
+			minutes =  timePicker1.getCurrentMinute() + "";
 			
+			String s = new ClientToServer().registerUser();
+			
+			textView2.setText(s);
+//			textView3.setText(minutes);
 		} else if(v.getId()==R.id.back) {			
 			Intent changeView = new Intent(getApplicationContext(), ResultsActivity.class);
 			startActivity(changeView);
-			overridePendingTransition(R.anim.slide_left, R.anim.slide_right);
-	    } else if(v.getId()==R.id.day) {
-			night.setChecked(false);
-			timeFrame = "day";
-		} else if(v.getId()==R.id.night) {
-			day.setChecked(false);
-			timeFrame = "night";
+			overridePendingTransition(R.anim.slide_left, R.anim.slide_right); 
 		} else if(v.getId()==R.id.increase) {
 			decrease.setChecked(false);
 			predictLevel = "increase";

@@ -14,50 +14,21 @@
         android:id="@+id/textView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:textSize="24sp"
-        android:text="Info" />
-
-    <RadioButton
-        android:id="@+id/increase"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@+id/textView1"
-        android:layout_marginTop="65dp"
-        android:text="Increase" />
+        android:text="Info"
+        android:textSize="24sp" />
 
     <RadioButton
         android:id="@+id/decrease"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
         android:layout_alignStart="@+id/increase"
         android:layout_below="@+id/increase"
         android:text="Decrease" />
-
-    <CheckBox
-        android:id="@+id/day"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="24dp"
-        android:layout_toStartOf="@+id/night"
-        android:text="Day" />
-
-    <CheckBox
-        android:id="@+id/night"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="26dp"
-        android:layout_toLeftOf="@+id/done"
-        android:layout_toStartOf="@+id/night"
-        android:text="Night" />
 
     <Button
         android:id="@+id/back"
@@ -66,8 +37,43 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
         android:layout_alignTop="@+id/done"
-        android:layout_toLeftOf="@+id/day"
-        android:layout_toStartOf="@+id/day"
         android:text="←" />
+
+    <RadioButton
+        android:id="@+id/increase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/textView1"
+        android:layout_marginTop="46dp"
+        android:text="Increase" />
+
+    <TimePicker
+        android:id="@+id/timePicker1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/decrease"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/timePicker1"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
+        android:text="TextView" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/textView2"
+        android:layout_below="@+id/textView2"
+        android:layout_marginTop="18dp"
+        android:text="TextView" />
 
 </RelativeLayout>

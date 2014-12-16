@@ -10,7 +10,7 @@
 -author("David").
 -export([add_tweet/2,start/0]).
 
-start()-> database:start().
+start()-> database:connect().
 
 string_count(String,SearchString) ->
   Position = string:str(String,SearchString),

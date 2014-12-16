@@ -13,7 +13,7 @@
 -export([get_happiness/2, get_total/2, set_happiness/3, set_total/3, clear_all_data/0]).
 
 clear_all_data() ->
-  database:start(),
+  database:connect(),
   database:remove("countries").
 
 get_country(Country) ->

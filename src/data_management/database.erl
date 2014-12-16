@@ -8,51 +8,30 @@
 %%%-------------------------------------------------------------------
 -module(database).
 -author("Simeon").
+-behaviour(gen_server).
 
 %% API
--export([start/0, stop/0, store/2, fetch/1, fetchMap/1, remove/1, store_in_store/3]).
+-export([start/0, init/1, store/2, fetch/1, remove/1, handle_call/3,
+  handle_cast/2, handle_info/2, terminate/2, code_change/3, connect/0,
+  store_in_store/3, fetch_recursive/2]).
+
+connect() -> database_sup:start_link().
 
 start() ->
-  ServerPid = whereis(sts),
-  if is_pid(ServerPid) == true ->
-    already_started;
-  true ->
-    spawn(fun() -> init() end),
-    started
-  end.
+  gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-init() ->
-  process_flag(trap_exit, true),
+init([]) ->
   {ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 8087),
-  register(sts, Pid),
-  receive _ ->
-    init()
-  end.
+  {ok, Pid}.
 
-stop()-> ServerPid = whereis(sts),
-  process_flag(trap_exit, true),
-  if is_pid(ServerPid) == true -> exit(ServerPid, kill),
-      receive
-        _-> stopped
-      end;
-    true -> already_stopped
-  end.
+store(Key, Value) ->
+  gen_server:call(?MODULE, {store, Key, Value}).
 
 store_in_store(Key1, Key2, Value) ->
   store(Key1, maps:put(Key2, Value, fetch(Key1))).
 
-store(Key, Value) ->
-  if is_map(Value) == true ->
-    ProcessedValue = Value;
-  true ->
-    ProcessedValue = term_to_binary(Value)
-  end,
-  RiakObject = riakc_obj:new(<<"whysosad">>, list_to_binary(Key), ProcessedValue),
-  riakc_pb_socket:put(sts, RiakObject).
-
 fetch(Key) ->
-  Response = riakc_pb_socket:get(sts, <<"whysosad">>, list_to_binary(Key)),
-  fetch(handle_response, Response).
+  gen_server:call(?MODULE, {fetch, Key}).
 
 fetch_recursive(Bucket, [Keys]) ->
   fetch_recursive(Keys, fetchMap(Bucket));
@@ -61,17 +40,43 @@ fetch_recursive([Key | Keys], Map) ->
 fetch_recursive(Key, Map) ->
   maps:get(Key, Map).
 
-fetch(handle_response, {error,_}) -> notfound;
-fetch(handle_response, Response) ->
-  {_,{_,_,_,_,[{_,Value}],_,_}} = Response,
-  binary_to_term(Value).
-
 fetchMap(Key) ->
   Map = fetch(Key),
   if Map == notfound ->
     store(Key, #{}), #{};
-  true ->
-    Map
+    true ->
+      Map
   end.
 
-remove(Key) -> riakc_pb_socket:delete(sts, <<"whysosad">>, list_to_binary(Key)).
+remove(Key) ->
+  gen_server:call(?MODULE, {remove, Key}).
+
+handle_call({store, Key, Value}, _From, RiakPid) ->
+  if is_map(Value) == true ->
+    ProcessedValue = Value;
+  true ->
+    ProcessedValue = term_to_binary(Value)
+  end,
+  RiakObject = riakc_obj:new(<<"whysosad">>, list_to_binary(Key), ProcessedValue),
+  Reply = riakc_pb_socket:put(RiakPid, RiakObject),
+  {reply, Reply, RiakPid};
+handle_call({fetch, Key}, _From, RiakPid) ->
+  Response = riakc_pb_socket:get(RiakPid, <<"whysosad">>, list_to_binary(Key)),
+  Reply = case Response of
+    {error,_} -> notfound;
+    {_,{_,_,_,_,[{_,Value}],_,_}} -> binary_to_term(Value)
+  end,
+  {reply, Reply, RiakPid};
+handle_call({remove, Key}, _From, RiakPid) ->
+  Reply = riakc_pb_socket:delete(RiakPid, <<"whysosad">>, list_to_binary(Key)),
+  {reply, Reply, RiakPid}.
+
+handle_cast(stop, RiakPid) -> {stop, normal, RiakPid}.
+
+handle_info(_Info, _State) ->
+  erlang:error(not_implemented).
+
+terminate(_Reason, _State) -> ok.
+
+code_change(_OldVsn, _State, _Extra) ->
+  erlang:error(not_implemented).

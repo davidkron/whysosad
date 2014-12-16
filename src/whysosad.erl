@@ -17,6 +17,7 @@ start()->
   Parameters = [{delimited, length},{stall_warnings, true},{track,string:join(const:sad_smileys() ++ const:happy_smileys(),",")}],
   process_flag(trap_exit, true),
   spawn_link(fun ()->httpserver:start() end),
+  twitterminer_source:start(),
   twitter_loop(URL,Parameters).
 
 twitter_loop(URL, Parameters)->

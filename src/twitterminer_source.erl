@@ -1,6 +1,6 @@
 -module(twitterminer_source).
 
--export([mine/2, twitter_print_pipeline/3, twitter_producer/3, get_account_keys/1]).
+-export([start/0,mine/2, twitter_print_pipeline/3, twitter_producer/3, get_account_keys/1]).
 
 -record(account_keys, {api_key, api_secret,
                        access_token, access_token_secret}).
@@ -8,6 +8,9 @@
 keyfind(Key, L) ->
   {Key, V} = lists:keyfind(Key, 1, L),
   V.
+
+start()->
+  happines_calculator:start().
 
 %% @doc Get Twitter account keys from a configuration file.
 get_account_keys(Name) ->
@@ -20,7 +23,6 @@ get_account_keys(Name) ->
 
 %% @doc This example will download a sample of tweets and print it.
 mine(URL,Parameters) ->
-  happines_calculator:start(),
   % We get our keys from the twitterminer.config configuration file.
   Keys = get_account_keys(account1),
 

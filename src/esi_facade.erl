@@ -1,11 +1,14 @@
 -module(esi_facade).
 -import(proplists, [get_value/2]).
--export([current_happiness/3, place_bet/3, register_user/3, get_all_bets/3,current_score/3, get_user_credits/3, total_users/3]).
+-export([login/3,current_happiness/3, place_bet/3, register_user/3, get_all_bets/3,current_score/3, get_user_credits/3, total_users/3]).
+
+
 
 safe_deliver(Sid, Fun) ->
   try Fun() of
     {error, Error} -> mod_esi:deliver(Sid, "{Error:" ++ atom_to_list(Error) ++ "}");
-    ok -> mod_esi:deliver(Sid, "Sucess");
+    true -> mod_esi:deliver(Sid, "Success");
+    ok -> mod_esi:deliver(Sid, "Success");
     Result -> mod_esi:deliver(Sid, Result)
   catch
     error:Error -> erlang:display(erlang:get_stacktrace()),
@@ -60,8 +63,17 @@ place_bet(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   end
 end).
 
+login(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
+  Args = httpd:parse_query(Input),
+  erlang:display("Logging in"),
+  User = required_param("user", Args),
+  Password = required_param("password", Args),
+  users:authenticate(User,Password)
+end).
+
 register_user(Sid, _Env, Input) -> safe_deliver(Sid, fun() ->
   Args = httpd:parse_query(Input),
+  erlang:display("Registering"),
   User = required_param("user", Args),
   Password = required_param("password", Args),
   users:add(User, Password)

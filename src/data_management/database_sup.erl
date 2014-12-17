@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @author Simeon
+%%% @author Simeon Ivanov
 %%% @copyright (C) 2014, <COMPANY>
 %%% @doc
 %%%

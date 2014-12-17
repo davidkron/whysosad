@@ -1,2 +1,2 @@
-./rebar compile
+./rebar get-deps compile
 erl -pa deps/*/ebin -pa ebin -config twitterminer -s whysosad start

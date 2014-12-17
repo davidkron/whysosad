@@ -57,7 +57,7 @@ changePassword(UserName, Password) ->
 
 validateUserName(UserName) ->
   %% May contain only latin alphanumeric, and dot and underscore characters.
-  %% Can't contain underscore characters at the beginning and end.
+  %% Can't contain underscore characters at the beginning and at the end.
   Pattern = "^^([^._])+([a-zA-Z0-9_.])+([^._])+$",
   Match = re:run(UserName, Pattern),
   if Match == nomatch ->

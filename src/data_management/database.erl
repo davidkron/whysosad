@@ -28,7 +28,7 @@ store(Key, Value) ->
   gen_server:call(?MODULE, {store, Key, Value}).
 
 store_in_store(Key1, Key2, Value) ->
-  store(Key1, maps:put(Key2, Value, fetch(Key1))).
+  store(Key1, maps:put(Key2, Value, fetchMap(Key1))).
 
 fetch(Key) ->
   gen_server:call(?MODULE, {fetch, Key}).

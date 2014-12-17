@@ -1,7 +1,7 @@
 1.  Compile the dependencies and the package
 
 
-        $ ./rebar compile
+        $ ./rebar get-deps compile
 
 2.  Run
 

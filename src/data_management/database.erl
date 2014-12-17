@@ -11,9 +11,9 @@
 -behaviour(gen_server).
 
 %% API
--export([start/0, init/1, store/2, fetch/1, remove/1, handle_call/3,
-  handle_cast/2, handle_info/2, terminate/2, code_change/3, connect/0,
-  store_in_store/3, fetch_recursive/2]).
+-export([start/0, init/1, store/2, fetch/1, fetchMap/1, fetch_recursive/2,
+  remove/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
+  code_change/3, connect/0, store_in_store/3]).
 
 connect() -> database_sup:start_link().
 

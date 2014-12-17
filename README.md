@@ -16,9 +16,9 @@ Alternativly Compile and run
 
 http requests:
 
-        <serverip>:10111/esi/esi_facade:place_bet?user=<username>&password=<password>&country=<country>&targettime=<time>&targetstatus=<happier/sadder>&credits=<credits to bet>
+        <serverip>:10111/esi/esi_facade:place_bet?user=<username>&password=<password>&country=<country>&hour=<hour>&minute=<minute>&targetstatus=<happier/sadder>&credits=<credits to bet>
         <serverip>:10111/esi/esi_facade:register_user?user=<username>&password=<password>
-        <serverip>:10111/esi/esi_facade:register_user?user=<username>&password=<password>
+        <serverip>:10111/esi/esi_facade:login?user=<username>&password=<password>
         <serverip>:10111/esi/esi_facade:get_all_bets?user=<username>&password=<password>
         <serverip>:10111/esi/esi_facade:get_user_credits?user=<username>&password=<password>
         <serverip>:10111/esi/esi_facade:current_happiness?apikey=<apikey>

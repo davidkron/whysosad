@@ -10,19 +10,34 @@
 -author("David").
 
 %% API
--export([place_bet/6, get_users_bets/2]).
+-export([place_bet/7, get_users_bets/2]).
 
-current_time() -> {_, Time, _} = now(), Time.
+get_bet_target_time(TargetHour, TargetMin) ->
+  {_, {Hour, Min, _}} = calendar:local_time(),
+  Targettime_today_s = (TargetHour * 60 + TargetMin) * 60,
+  Currenttime_today_s = (Hour * 60 + Min) * 60,
+  Timediff_s = Targettime_today_s - Currenttime_today_s,
+  case (Timediff_s < 0) of
+    true ->
+      util:current_time() + ((Timediff_s + (24 * 60 * 60)) div const:interval_s());
+    false ->
+      util:current_time() + (Timediff_s div const:interval_s())
+  end.
 
 
-place_bet(UserName, Password, Country, TargetTime, TargetStatus, Stake) ->
+place_bet(UserName, Password, Country, TargetHour, TargetMin, TargetStatus, Stake) ->
   users:authenticated_action(UserName, Password, fun() ->
-      Status = case TargetStatus of
-                 "happier" -> happier;
-                 "sadder" -> sadder;
-                 _ -> {false, invalid_targetstatus}
-               end,
-    PlacedTime = current_time(), % The time the user placed the bet
+    TargetTime = get_bet_target_time(TargetHour, TargetMin),
+    PlacedTime = util:current_time(), % The time the user placed the bet
+    case PlacedTime == TargetTime of
+      true -> throw("Cant bet on current time");
+      false -> ok
+    end,
+    Status = case TargetStatus of
+               "happier" -> happier;
+               "sadder" -> sadder;
+               _ -> {false, invalid_targetstatus}
+             end,
     users:fund(UserName, -Stake), % Take away the amount of credits the user is betting for now
     db_bets:create(UserName, Country, PlacedTime, TargetTime, Status, Stake,
       get_odds(Country, TargetTime, Status))
@@ -36,19 +51,23 @@ get_users_bets(UserName, Password) ->
 
 update_users_bets(UserName) ->
   Bets = db_bets:get_bets(UserName),
-  Statuses = [get_bet_status(Bet) || Bet <- Bets],
-  %Fund any unfunded winning bets, and overwrite the previous bets as "funded"
-  NewBets = [fund(UserName, Status, Bet) || Status <- Statuses, Bet <- Bets],
+  NewBets = [update_bet(UserName, Bet) || Bet <- Bets],
   db_bets:set_bets(UserName, NewBets).
+
+update_bet(UserName, Bet) ->
+  Status = get_bet_status(Bet),
+  %Fund any unfunded winning bets, and overwrite the previous bets as "funded"
+  NewBet = fund(UserName, Status, Bet),
+  NewBet.
 
 get_bet_status(Bet) ->
   case maps:get(funded, Bet) of
-    true -> maps:get(status, Bet, error);
+    true -> erlang:display("ALLREADY FUNDED"), maps:get(status, Bet, error);
     _ -> calculate_bet_status(Bet)
   end.
 
 calculate_bet_status(Bet) ->
-  CurrentTime = current_time(),
+  CurrentTime = util:current_time(),
   Country = maps:get(country, Bet),
   TargetTime = maps:get(targettime, Bet),
   TargetHappiness = maps:get(targetstatus, Bet),

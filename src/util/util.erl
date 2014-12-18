@@ -12,4 +12,17 @@
 %% API
 -export([current_time/0]).
 
-current_time() -> {MegaSecs, Secounds, _} = now(), (MegaSecs * 100000 + Secounds) div const:interval_s().
+floor(X) when X < 0 ->
+  T = trunc(X),
+  case X - T == 0 of
+    true -> T;
+    false -> T - 1
+  end;
+
+floor(X) ->
+  trunc(X) .
+
+idiv(A, B) ->
+  floor(A / B) .
+
+current_time() -> {MegaSecs, Secounds, _} = now(), idiv(MegaSecs * 100000.0 + Secounds,  float(const:interval_s())).

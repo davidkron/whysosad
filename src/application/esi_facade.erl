@@ -31,14 +31,7 @@ place_bet(Sid, _Env, Input) -> esi_util:safe_deliver(Sid, fun() ->
   SentMin = required_param_int("minute", Args),
   TargetStatus = required_param("targetstatus", Args),
   Credits = required_param_int("credits", Args),
-  {_, {Hour, Min, _}} = calendar:local_time(),
-  Timediff = (SentHour * 60 + SentMin) - (Hour * 60 + Min),
-  case (Timediff < 0) of
-    true ->
-      betting:place_bet(User, Password, Country, util:current_time() + ((Timediff + (24 * 60 * 60)) div const:interval_s()), TargetStatus, Credits);
-    false ->
-      betting:place_bet(User, Password, Country, util:current_time() + (Timediff div const:interval_s()), TargetStatus, Credits)
-  end
+  betting:place_bet(User, Password, Country,SentHour,SentMin, TargetStatus, Credits)
 end).
 
 login(Sid, _Env, Input) -> esi_util:safe_deliver(Sid, fun() ->

@@ -62,7 +62,7 @@ update_bet(UserName, Bet) ->
 
 get_bet_status(Bet) ->
   case maps:get(funded, Bet) of
-    true -> erlang:display("ALLREADY FUNDED"), maps:get(status, Bet, error);
+    true -> maps:get(status, Bet, error);
     _ -> calculate_bet_status(Bet)
   end.
 

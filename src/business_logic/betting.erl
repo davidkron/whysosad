@@ -91,15 +91,15 @@ fund(Username, Status, Bet) ->
   Funded = maps:get(funded, Bet),
   case Funded of
     false ->
-      Newbet = Bet#{funded=>true, status=>Status},
+      Newbet = Bet#{status=>Status},
       Credits = maps:get(credits, Bet),
       case Status of
         inprogress -> Newbet;
-        tie -> users:fund(Username, Credits), Newbet; % Tie, give user his money back 100%
+        tie -> users:fund(Username, Credits), Newbet#{funded=>true}; % Tie, give user his money back 100%
         won ->
           Odds = maps:get(odds, Bet),
-          users:fund(Username, Credits * Odds), Newbet; % win, give odds% of money back
-        loose -> Newbet % Loose, user dont get his money back
+          users:fund(Username, Credits * Odds), Newbet#{funded=>true}; % win, give odds% of money back
+        loose -> Newbet#{funded=>true} % Loose, user dont get his money back
       end;
     true ->
       Bet

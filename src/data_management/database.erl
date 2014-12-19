@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
-%%% @author Simeon Ivanov
-%%% @copyright (C) 2014, <COMPANY>
+%%% @author Simeon Ivanov, David Jensen
+%%% @copyright (C) 2014, Team Pegasus
 %%% @doc
 %%%
 %%% @end
@@ -11,9 +11,9 @@
 -behaviour(gen_server).
 
 %% API
--export([start/0, init/1, store/2, fetch/1, fetchMap/1, fetch_recursive/2,
-  remove/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
-  code_change/3, connect/0, store_in_store/3]).
+-export([start/0, init/1, store/3, fetch/2, remove/2, handle_call/3,
+  handle_cast/2, handle_info/2, terminate/2, code_change/3, connect/0,
+  stop/0, fetch_map/2, map_reduce/2, to_binary/1]).
 
 connect() -> database_sup:start_link().
 
@@ -24,59 +24,78 @@ init([]) ->
   {ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 8087),
   {ok, Pid}.
 
-store(Key, Value) ->
-  gen_server:call(?MODULE, {store, Key, Value}).
+stop() ->
+  gen_server:cast(?MODULE, stop).
 
-store_in_store(Key1, Key2, Value) ->
-  store(Key1, maps:put(Key2, Value, fetchMap(Key1))).
+store(Bucket, Key, Value) ->
+  gen_server:call(?MODULE, {store, Bucket, Key, Value}).
 
-fetch(Key) ->
-  gen_server:call(?MODULE, {fetch, Key}).
+fetch(Bucket, Key) ->
+  gen_server:call(?MODULE, {fetch, Bucket, Key}).
 
-fetch_recursive(Bucket, [Keys]) ->
-  fetch_recursive(Keys, fetchMap(Bucket));
-fetch_recursive([Key | Keys], Map) ->
-  fetch_recursive(Keys, maps:get(Key, Map));
-fetch_recursive(Key, Map) ->
-  maps:get(Key, Map).
-
-fetchMap(Key) ->
-  Map = fetch(Key),
-  if Map == notfound ->
-    store(Key, #{}), #{};
-    true ->
-      Map
+fetch_map(Bucket, Key) ->
+  case fetch(Bucket, Key) of
+    notfound -> #{};
+    Map -> Map
   end.
 
-remove(Key) ->
-  gen_server:call(?MODULE, {remove, Key}).
+remove(Bucket, Key) ->
+  gen_server:call(?MODULE, {remove, Bucket, Key}).
 
-handle_call({store, Key, Value}, _From, RiakPid) ->
-  if is_map(Value) == true ->
-    ProcessedValue = Value;
-  true ->
-    ProcessedValue = term_to_binary(Value)
-  end,
-  RiakObject = riakc_obj:new(<<"whysosad">>, list_to_binary(Key), ProcessedValue),
+map_reduce(Inputs, QueryTerms) ->
+  gen_server:call(?MODULE, {map_reduce, Inputs, QueryTerms}).
+
+handle_call({store, Bucket, Key, Value}, _From, RiakPid) ->
+  RiakObject = riakc_obj:new(
+    to_binary(Bucket),
+    to_binary(Key),
+    to_binary(Value)
+  ),
   Reply = riakc_pb_socket:put(RiakPid, RiakObject),
   {reply, Reply, RiakPid};
-handle_call({fetch, Key}, _From, RiakPid) ->
-  Response = riakc_pb_socket:get(RiakPid, <<"whysosad">>, list_to_binary(Key)),
+handle_call({fetch, Bucket, Key}, _From, RiakPid) ->
+  Response = riakc_pb_socket:get(
+    RiakPid, to_binary(Bucket),
+    to_binary(Key)
+  ),
   Reply = case Response of
     {error,_} -> notfound;
-    {_,{_,_,_,_,[{_,Value}],_,_}} -> binary_to_term(Value)
+    {ok, Obj} -> binary_to_term(riakc_obj:get_value(Obj))
   end,
   {reply, Reply, RiakPid};
-handle_call({remove, Key}, _From, RiakPid) ->
-  Reply = riakc_pb_socket:delete(RiakPid, <<"whysosad">>, list_to_binary(Key)),
+handle_call({remove, Bucket, Key}, _From, RiakPid) ->
+  Reply = riakc_pb_socket:delete(
+    RiakPid,
+    to_binary(Bucket),
+    to_binary(Key)
+  ),
+  {reply, Reply, RiakPid};
+handle_call({map_reduce, Input, QueryTerms}, _From, RiakPid) ->
+  Reply = riakc_pb_socket:mapred(RiakPid, Input, QueryTerms),
   {reply, Reply, RiakPid}.
 
-handle_cast(stop, RiakPid) -> {stop, normal, RiakPid}.
+handle_cast(stop, RiakPid) ->
+  {stop, normal, RiakPid}.
 
 handle_info(_Info, _State) ->
   erlang:error(not_implemented).
 
-terminate(_Reason, _State) -> ok.
+terminate(_Reason, _State) ->
+  ok.
 
 code_change(_OldVsn, _State, _Extra) ->
   erlang:error(not_implemented).
+
+to_binary(Value) ->
+  IsList = is_list(Value),
+  IsInteger = is_integer(Value),
+  IsBinary = is_binary(Value),
+  if IsList ->
+      list_to_binary(Value);
+    IsInteger ->
+      integer_to_binary(Value);
+    IsBinary ->
+      Value;
+    true ->
+      term_to_binary(Value)
+  end.

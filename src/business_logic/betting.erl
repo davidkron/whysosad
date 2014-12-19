@@ -36,23 +36,23 @@ place_bet(UserName, Password, Country, TargetHour, TargetMin, TargetStatus, Stak
     Status = case TargetStatus of
                "happier" -> happier;
                "sadder" -> sadder;
-               _ -> {false, invalid_targetstatus}
+               _ -> throw(invalid_targetstatus)
              end,
     users:fund(UserName, -Stake), % Take away the amount of credits the user is betting for now
-    db_bets:create(UserName, Country, PlacedTime, TargetTime, Status, Stake,
+    database_bets:create(UserName, Country, PlacedTime, TargetTime, Status, Stake,
       get_odds(Country, TargetTime, Status))
   end).
 
 get_users_bets(UserName, Password) ->
   users:authenticated_action(UserName, Password, fun() ->
     update_users_bets(UserName),
-    db_bets:get_bets(UserName)
+    database_bets:get_bets(UserName)
   end).
 
 update_users_bets(UserName) ->
-  Bets = db_bets:get_bets(UserName),
+  Bets = database_bets:get_bets(UserName),
   NewBets = [update_bet(UserName, Bet) || Bet <- Bets],
-  db_bets:set_bets(UserName, NewBets).
+  database_bets:set_bets(UserName, NewBets).
 
 update_bet(UserName, Bet) ->
   Status = get_bet_status(Bet),

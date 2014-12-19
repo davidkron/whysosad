@@ -36,7 +36,7 @@ place_bet(UserName, Password, Country, TargetHour, TargetMin, TargetStatus, Stak
     Status = case TargetStatus of
                "happier" -> happier;
                "sadder" -> sadder;
-               _ -> {false, invalid_targetstatus}
+               _ -> throw("invalid_targetstatus")
              end,
     users:fund(UserName, -Stake), % Take away the amount of credits the user is betting for now
     db_bets:create(UserName, Country, PlacedTime, TargetTime, Status, Stake,

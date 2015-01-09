@@ -1,0 +1,4 @@
+sudo rm -R /tmp/beams/
+sudo mkdir /tmp/beams
+sudo cp ebin/mapreduce.beam /tmp/beams/
+sudo riak-admin erl-reload

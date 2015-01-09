@@ -10,7 +10,18 @@
 -author("David").
 -export([add_tweet/2,start/0]).
 
-start()-> database:connect().
+start()->
+  database:connect(),
+  spawn(fun() -> all_happiness_cron(util:timestamp(), util:timestamp()) end),
+  ok.
+
+%% run mapreduce job for all countries happiness every 10 minutes
+all_happiness_cron(Now, Then) ->
+  if (Now - Then >= 600) ->
+    database_countries:set_all_happiness(),
+    all_happiness_cron(Now, Now);
+  true -> all_happiness_cron(Now, Then)
+  end.
 
 string_count(String,SearchString) ->
   Position = string:str(String,SearchString),
@@ -37,7 +48,8 @@ add_tweet(TT,ResultPlace) ->
             Sadness > Happy -> country:decrease_happiness(Country, Time);
             Sadness == Happy -> ok
           end,
-          country:increase_total(Country, Time)
+          country:increase_total(Country, Time),
+          country:add_country(Country)
       end;
     X -> io:format("Something: ~p ~n",X)
   end.

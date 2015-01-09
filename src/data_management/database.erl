@@ -13,7 +13,7 @@
 %% API
 -export([start/0, init/1, store/3, fetch/2, remove/2, handle_call/3,
   handle_cast/2, handle_info/2, terminate/2, code_change/3, connect/0,
-  stop/0, fetch_map/2, map_reduce/2, to_binary/1]).
+  stop/0, fetch_map/2, map_reduce/2, to_binary/1, store_set/2, fetch_set/1]).
 
 connect() -> database_sup:start_link().
 
@@ -30,8 +30,14 @@ stop() ->
 store(Bucket, Key, Value) ->
   gen_server:call(?MODULE, {store, Bucket, Key, Value}).
 
+store_set(Key, Value) ->
+  gen_server:call(?MODULE, {store_set, Key, Value}).
+
 fetch(Bucket, Key) ->
   gen_server:call(?MODULE, {fetch, Bucket, Key}).
+
+fetch_set(Key) ->
+  gen_server:call(?MODULE, {fetch_set, Key}).
 
 fetch_map(Bucket, Key) ->
   case fetch(Bucket, Key) of
@@ -53,6 +59,15 @@ handle_call({store, Bucket, Key, Value}, _From, RiakPid) ->
   ),
   Reply = riakc_pb_socket:put(RiakPid, RiakObject),
   {reply, Reply, RiakPid};
+handle_call({store_set, Key, Value}, _From, RiakPid) ->
+  Set = riakc_set:new(),
+  NewSet = riakc_set:add_element(list_to_binary(Value), Set),
+  Reply = riakc_pb_socket:update_type(RiakPid,
+    {<<"sets">>, <<"sets">>},
+    list_to_binary(Key),
+    riakc_set:to_op(NewSet)
+  ),
+  {reply, Reply, RiakPid};
 handle_call({fetch, Bucket, Key}, _From, RiakPid) ->
   Response = riakc_pb_socket:get(
     RiakPid, to_binary(Bucket),
@@ -62,6 +77,17 @@ handle_call({fetch, Bucket, Key}, _From, RiakPid) ->
     {error,_} -> notfound;
     {ok, Obj} -> binary_to_term(riakc_obj:get_value(Obj))
   end,
+  {reply, Reply, RiakPid};
+handle_call({fetch_set, Key}, _From, RiakPid) ->
+  Response = riakc_pb_socket:fetch_type(
+    RiakPid,
+    {<<"sets">>,<<"sets">>},
+    list_to_binary(Key)
+  ),
+  Reply = case Response of
+            {error,_} -> notfound;
+            {ok, Set} -> riakc_set:value(Set)
+          end,
   {reply, Reply, RiakPid};
 handle_call({remove, Bucket, Key}, _From, RiakPid) ->
   Reply = riakc_pb_socket:delete(

@@ -6,7 +6,7 @@ current_happiness(Sid, _Env, Input) -> esi_util:safe_deliver(Sid, fun() ->
   Args = httpd:parse_query(Input),
   ApiKey = required_param("apikey", Args),
   validate_apikey(ApiKey),
-  country:happiness_json(util:current_time())
+  country:get_all_happiness()
 end).
 
 current_score(Sid, _Env, Input) -> esi_util:safe_deliver(Sid, fun() ->
